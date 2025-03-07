@@ -1,11 +1,10 @@
-// app/admin/manage/page.tsx
+// src/admin/manage/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/component/DashboardLayout';
-
 
 //<<-------------------Type------------------->>
 type CustomUser = {
@@ -16,7 +15,7 @@ type CustomUser = {
 };
 
 type Admin = {
-  id: number;
+  id: string;
   username: string;
   role: string;
   createdAt: string;
@@ -30,10 +29,10 @@ export default function AdminManage() {
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [newAdmin, setNewAdmin] = useState({ username: '', password: '', role: 'ADMIN' });
+  const [newAdmin, setNewAdmin] = useState({ username: '', password: '', role: 'admin' });
   const [showAddForm, setShowAddForm] = useState(false);
   const [passwordReset, setPasswordReset] = useState<{
-    adminId: number | null;
+    adminId: string | null;
     newPassword: string;
     showForm: boolean;
   }>({
@@ -45,7 +44,7 @@ export default function AdminManage() {
   //<<-------------------useEffect------------------->>
   useEffect(() => {
     if (status === 'loading') return;
-    if (!session?.user || (session.user as CustomUser).role !== 'superadmin') {
+    if (!session?.user || session.user.role !== 'superadmin') {
         router.push('/');
     } else {
       fetchAdmins();
@@ -55,46 +54,66 @@ export default function AdminManage() {
   //<<-------------------function------------------->>
   const fetchAdmins = async () => {
     setLoading(true);
-    const response = await fetch('/api/admin');
-    const data = await response.json();
-    if (response.ok) {
+    try {
+      const response = await fetch('/api/admin');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
+      }
+      const data = await response.json();
       setAdmins(data);
-    } else {
-      setError(data.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const addNewAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const response = await fetch('/api/admin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newAdmin),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      setNewAdmin({ username: '', password: '', role: 'ADMIN' });
+    try {
+      const response = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAdmin),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'เกิดข้อผิดพลาดในการเพิ่มผู้ดูแลระบบ');
+      }
+      
+      setNewAdmin({ username: '', password: '', role: 'admin' });
       setShowAddForm(false);
       fetchAdmins();
-    } else {
-      setError(data.message || 'เกิดข้อผิดพลาดในการเพิ่มผู้ดูแลระบบ');
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการเพิ่มผู้ดูแลระบบ');
     }
   };
 
   const resetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const response = await fetch(`/api/admin/${passwordReset.adminId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: passwordReset.newPassword }),
-    });
-    const data = await response.json();
-    if (response.ok) {
+    try {
+      if (!passwordReset.adminId) return;
+      
+      const response = await fetch(`/api/admin/${passwordReset.adminId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordReset.newPassword }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
+      }
+      
       setPasswordReset({ adminId: null, newPassword: '', showForm: false });
       alert('เปลี่ยนรหัสผ่านสำเร็จ');
-    } else {
-      setError(data.message || 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
     }
   };
 
@@ -102,10 +121,11 @@ export default function AdminManage() {
     return <div className="p-8">กำลังโหลด...</div>;
   }
 
-  if (!session?.user || (session.user as CustomUser).role !== 'SUPER_ADMIN') {
+  if (!session?.user || session.user.role !== 'superadmin') {
     return null;
   }
-  //<<-------------------Use effect------------------->>
+
+  //<<-------------------UI------------------->>
   return (
     <DashboardLayout>
     <div className="container mx-auto p-8">
@@ -168,8 +188,8 @@ export default function AdminManage() {
                 value={newAdmin.role}
                 onChange={(e) => setNewAdmin({...newAdmin, role: e.target.value})}
               >
-                <option value="ADMIN">Admin</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
+                <option value="admin">Admin</option>
+                <option value="superadmin">Super Admin</option>
               </select>
             </div>
             
@@ -202,7 +222,7 @@ export default function AdminManage() {
                 <td className="px-6 py-4 whitespace-nowrap">{admin.username}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    admin.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
+                    admin.role === 'superadmin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
                   }`}>
                     {admin.role}
                   </span>
