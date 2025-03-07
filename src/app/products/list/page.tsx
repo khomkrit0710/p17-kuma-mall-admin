@@ -6,27 +6,26 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import DashboardLayout from '@/component/DashboardLayout';
 
-// กำหนดประเภทข้อมูลสินค้า
-type Product = {
+// กำหนดประเภทข้อมูลกลุ่มสินค้า
+type GroupProduct = {
   id: number;
   uuid: string;
+  group_name: string;
+  description: string;
+  main_img_url: string[];
+  create_Date: string;
+  products: ProductBrief[];
+  total_products: number;
+};
+
+// กำหนดประเภทข้อมูลสินค้าแบบย่อ
+type ProductBrief = {
+  id: number;
   sku: string;
   name_sku: string;
-  quantity: number;
   price_origin: number;
-  make_price: number | null;
+  quantity: number;
   img_url: string | null;
-  group_name: string;
-  create_Date: string;
-  update_date: string;
-  categories: { id: number; name: string }[];
-  collections: { id: number; name: string }[];
-  flash_sale: {
-    id: number;
-    flash_sale_price: number;
-    end_date: string;
-    status: string;
-  } | null;
 };
 
 // กำหนดประเภทข้อมูล pagination
@@ -41,8 +40,8 @@ export default function ProductList() {
   const router = useRouter();
   const { data: session, status } = useSession();
   
-  // สถานะสำหรับรายการสินค้า
-  const [products, setProducts] = useState<Product[]>([]);
+  // สถานะสำหรับรายการกลุ่มสินค้า
+  const [groups, setGroups] = useState<GroupProduct[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
     page: 1,
@@ -57,6 +56,11 @@ export default function ProductList() {
   // สถานะสำหรับการโหลดและข้อผิดพลาด
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  
+  // สถานะสำหรับการลบ
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
   
   // ตรวจสอบการเข้าสู่ระบบ
   useEffect(() => {
@@ -65,11 +69,11 @@ export default function ProductList() {
     }
   }, [status, router]);
   
-  // โหลดข้อมูลสินค้า
+  // โหลดข้อมูลกลุ่มสินค้า
   useEffect(() => {
     if (status !== 'authenticated') return;
     
-    const fetchProducts = async () => {
+    const fetchGroups = async () => {
       setLoading(true);
       setError(null);
       
@@ -83,14 +87,14 @@ export default function ProductList() {
           queryParams.append('search', search);
         }
         
-        const response = await fetch(`/api/products?${queryParams.toString()}`);
+        const response = await fetch(`/api/group-products?${queryParams.toString()}`);
         
         if (!response.ok) {
-          throw new Error('ไม่สามารถโหลดข้อมูลสินค้าได้');
+          throw new Error('ไม่สามารถโหลดข้อมูลกลุ่มสินค้าได้');
         }
         
         const data = await response.json();
-        setProducts(data.data);
+        setGroups(data.data);
         setPagination(data.pagination);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
@@ -99,7 +103,7 @@ export default function ProductList() {
       }
     };
     
-    fetchProducts();
+    fetchGroups();
   }, [pagination.page, pagination.limit, search, status]);
   
   // จัดการการเปลี่ยนหน้า
@@ -120,23 +124,69 @@ export default function ProductList() {
     setPagination({ ...pagination, page: 1, limit: newLimit });
   };
   
-  // ฟังก์ชันสำหรับแสดงคำอธิบายของสถานะแฟลชเซลล์
-  const getFlashSaleStatus = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'กำลังดำเนินการ';
-      case 'expired':
-        return 'หมดเวลา';
-      case 'sold_out':
-        return 'สินค้าหมด';
-      default:
-        return status;
+  // แสดงกล่องยืนยันการลบ
+  const confirmDeleteGroup = (groupId: number) => {
+    setGroupToDelete(groupId);
+    setDeleteDialogOpen(true);
+  };
+  
+  // ปิดกล่องยืนยันการลบ
+  const closeDeleteDialog = () => {
+    setGroupToDelete(null);
+    setDeleteDialogOpen(false);
+  };
+  
+  // ดำเนินการลบกลุ่มสินค้า
+  const handleDeleteGroup = async () => {
+    if (!groupToDelete) return;
+    
+    try {
+      const response = await fetch(`/api/group-products/${groupToDelete}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'เกิดข้อผิดพลาดในการลบกลุ่มสินค้า');
+      }
+      
+      // แสดงข้อความสำเร็จ
+      setSuccess('ลบกลุ่มสินค้าและสินค้าทั้งหมดสำเร็จ');
+      
+      // โหลดข้อมูลกลุ่มสินค้าใหม่
+      const queryParams = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString(),
+      });
+      
+      if (search) {
+        queryParams.append('search', search);
+      }
+      
+      const fetchResponse = await fetch(`/api/group-products?${queryParams.toString()}`);
+      const data = await fetchResponse.json();
+      setGroups(data.data);
+      setPagination(data.pagination);
+      
+      // ลบข้อความสำเร็จหลัง 3 วินาที
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบกลุ่มสินค้า');
+    } finally {
+      closeDeleteDialog();
     }
   };
   
-  // คำนวณราคาส่วนลด
-  const calculateDiscountPercentage = (original: number, sale: number) => {
-    return Math.round(((original - sale) / original) * 100);
+  // ฟังก์ชันแปลงวันที่ให้อยู่ในรูปแบบไทย
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
   
   // สร้างตัวเลือกสำหรับ pagination
@@ -255,18 +305,24 @@ export default function ProductList() {
     <DashboardLayout>
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">รายการสินค้าทั้งหมด</h1>
+          <h1 className="text-2xl font-bold">รายการกลุ่มสินค้า</h1>
           <Link
             href="/products/add"
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
           >
-            เพิ่มสินค้าใหม่
+            เพิ่มกลุ่มสินค้าใหม่
           </Link>
         </div>
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+            {success}
           </div>
         )}
         
@@ -280,7 +336,7 @@ export default function ProductList() {
               <input
                 type="text"
                 id="search"
-                placeholder="ค้นหาตาม SKU, ชื่อสินค้า, หรือกลุ่มสินค้า"
+                placeholder="ค้นหาตามชื่อกลุ่มสินค้าหรือคำอธิบาย"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded"
@@ -330,112 +386,82 @@ export default function ProductList() {
           </div>
         )}
         
-        {/* ตารางแสดงข้อมูลสินค้า */}
+        {/* ตารางแสดงข้อมูลกลุ่มสินค้า */}
         <div className="bg-white rounded shadow overflow-x-auto mb-6">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">รูปภาพ</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อสินค้า</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ราคา</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">คงเหลือ</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">หมวดหมู่</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">กลุ่ม</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อกลุ่มสินค้า</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">คำอธิบาย</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จำนวนสินค้า</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">วันที่สร้าง</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จัดการ</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {products.length > 0 ? (
-                products.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
+              {groups.length > 0 ? (
+                groups.map((group) => (
+                  <tr key={group.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {product.img_url ? (
+                      {group.main_img_url && group.main_img_url.length > 0 ? (
                         <img 
-                          src={product.img_url} 
-                          alt={product.name_sku} 
+                          src={group.main_img_url[0]} 
+                          alt={group.group_name} 
                           className="w-12 h-12 object-cover rounded border"
                         />
                       ) : (
                         <div className="w-12 h-12 bg-gray-200 flex items-center justify-center rounded border">
-                          <span className="text-gray-500 text-xs">ไม่มีรูป</span>
+                          <span className="text-gray-400 text-xs">ไม่มีรูป</span>
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">{product.sku}</td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{product.name_sku}</div>
-                      {product.flash_sale && product.flash_sale.status === 'active' && (
-                        <div className="text-xs mt-1">
-                          <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                            Flash Sale: {calculateDiscountPercentage(product.price_origin, product.flash_sale.flash_sale_price)}% off
-                          </span>
-                        </div>
-                      )}
+                      <div className="font-medium text-gray-900">{group.group_name}</div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {product.flash_sale && product.flash_sale.status === 'active' ? (
-                        <div>
-                          <span className="line-through text-gray-500">{product.price_origin.toLocaleString()} บาท</span>
-                          <br />
-                          <span className="text-red-600 font-medium">{product.flash_sale.flash_sale_price.toLocaleString()} บาท</span>
-                        </div>
+                    <td className="px-4 py-3">
+                      {group.description ? (
+                        <div className="text-gray-500 truncate max-w-xs">{group.description}</div>
                       ) : (
-                        <span>{product.price_origin.toLocaleString()} บาท</span>
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`${product.quantity > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {product.quantity} ชิ้น
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                        {group.total_products} รายการ
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {product.categories.length > 0 ? (
-                          product.categories.map((category) => (
-                            <span 
-                              key={category.id} 
-                              className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
-                            >
-                              {category.name}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-gray-500 text-xs">-</span>
-                        )}
-                      </div>
-                    </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {product.group_name || '-'}
+                      {formatDate(group.create_Date)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="flex space-x-2">
-                        <Link 
-                          href={`/products/edit/${product.id}`}
+                        <Link
+                          href={`/products/edit/${group.id}`}
                           className="text-indigo-600 hover:text-indigo-900"
                         >
                           แก้ไข
                         </Link>
-                        <Link 
-                          href={`/products/view/${product.id}`}
-                          className="text-green-600 hover:text-green-900"
+                        <button
+                          onClick={() => confirmDeleteGroup(group.id)}
+                          className="text-red-600 hover:text-red-900"
                         >
-                          ดู
-                        </Link>
+                          ลบ
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ))
               ) : loading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
                     กำลังโหลดข้อมูล...
                   </td>
                 </tr>
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
-                    ไม่พบสินค้า {search && `สำหรับคำค้น "${search}"`}
+                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                    ไม่พบกลุ่มสินค้า {search && `สำหรับคำค้น "${search}"`}
                   </td>
                 </tr>
               )}
@@ -452,6 +478,32 @@ export default function ProductList() {
             </div>
             <div className="flex flex-wrap justify-center">
               {renderPagination()}
+            </div>
+          </div>
+        )}
+        
+        {/* กล่องยืนยันการลบ */}
+        {deleteDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+              <h3 className="text-lg font-medium mb-4">ยืนยันการลบ</h3>
+              <p className="mb-6 text-gray-600">
+                คุณต้องการลบกลุ่มสินค้านี้และสินค้าทั้งหมดในกลุ่มใช่หรือไม่? การกระทำนี้ไม่สามารถเรียกคืนได้
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={closeDeleteDialog}
+                  className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleDeleteGroup}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  ลบ
+                </button>
+              </div>
             </div>
           </div>
         )}

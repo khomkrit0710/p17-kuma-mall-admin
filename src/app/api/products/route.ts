@@ -22,19 +22,32 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
+    const group_id = searchParams.get("group_id");
     
     const skip = (page - 1) * limit;
 
     // สร้างเงื่อนไขการค้นหา
-    const whereCondition = search
-      ? {
-          OR: [
-            { sku: { contains: search, mode: "insensitive" } },
-            { name_sku: { contains: search, mode: "insensitive" } },
-            { group_name: { contains: search, mode: "insensitive" } },
-          ],
-        }
-      : {};
+    let whereCondition: any = {};
+    
+    if (search) {
+      whereCondition.OR = [
+        { sku: { contains: search, mode: "insensitive" } },
+        { name_sku: { contains: search, mode: "insensitive" } },
+        { group_name: { contains: search, mode: "insensitive" } },
+      ];
+    }
+    
+    // ถ้ามีการระบุ group_id ให้ดึงเฉพาะสินค้าในกลุ่มนั้น
+    if (group_id) {
+      const groupIdNum = parseInt(group_id);
+      if (!isNaN(groupIdNum)) {
+        whereCondition.product_group = {
+          some: {
+            group_id: groupIdNum
+          }
+        };
+      }
+    }
 
     // ดึงข้อมูลสินค้าพร้อมความสัมพันธ์
     const products = await prisma.product.findMany({
@@ -138,7 +151,7 @@ export async function GET(request: Request) {
   }
 }
 
-// ฟังก์ชันสำหรับเพิ่มสินค้าใหม่
+// ฟังก์ชันสำหรับเพิ่มสินค้าใหม่ (รองรับการเพิ่มในกลุ่ม)
 export async function POST(request: Request) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -163,7 +176,8 @@ export async function POST(request: Request) {
       img_url = null,
       group_name = "",
       categories = [],
-      collections = []
+      collections = [],
+      group_id = null  // พารามิเตอร์ใหม่สำหรับเชื่อมกับกลุ่ม
     } = await request.json();
 
     // ตรวจสอบว่ามีการส่งค่าที่จำเป็นมาหรือไม่
@@ -186,6 +200,24 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    // ถ้ามี group_id ตรวจสอบว่ากลุ่มมีอยู่จริงหรือไม่
+    let realGroupName = group_name;
+    if (group_id) {
+      const existingGroup = await prisma.group_product.findUnique({
+        where: { id: group_id }
+      });
+      
+      if (!existingGroup) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "ไม่พบกลุ่มสินค้าที่ระบุ" 
+        }, { status: 404 });
+      }
+      
+      // ใช้ชื่อกลุ่มจริงเพื่อแสดงผล
+      realGroupName = existingGroup.group_name;
+    }
+
     // สร้างข้อมูลสินค้าใหม่ด้วย Transaction เพื่อให้ทำงานพร้อมกัน
     const result = await prisma.$transaction(async (tx) => {
       // 1. สร้างสินค้า
@@ -201,11 +233,21 @@ export async function POST(request: Request) {
           product_heigth,
           product_weight,
           img_url,
-          group_name
+          group_name: realGroupName
         }
       });
 
-      // 2. เชื่อมความสัมพันธ์กับหมวดหมู่
+      // 2. เชื่อมความสัมพันธ์กับกลุ่ม (ถ้ามี)
+      if (group_id) {
+        await tx.product_to_group.create({
+          data: {
+            product_id: newProduct.id,
+            group_id: group_id
+          }
+        });
+      }
+
+      // 3. เชื่อมความสัมพันธ์กับหมวดหมู่
       if (categories.length > 0) {
         const categoryConnections = categories.map((categoryId: string) => ({
           product_id: newProduct.id,
@@ -217,7 +259,7 @@ export async function POST(request: Request) {
         });
       }
 
-      // 3. เชื่อมความสัมพันธ์กับคอลเลคชัน
+      // 4. เชื่อมความสัมพันธ์กับคอลเลคชัน
       if (collections.length > 0) {
         const collectionConnections = collections.map((collectionId: string) => ({
           product_id: newProduct.id,

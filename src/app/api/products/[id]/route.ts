@@ -148,6 +148,9 @@ export async function PUT(
     // ตรวจสอบว่ามีสินค้านี้อยู่จริงหรือไม่
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
+      include: {
+        product_group: true
+      }
     });
 
     if (!existingProduct) {
@@ -167,9 +170,10 @@ export async function PUT(
       product_heigth = null, 
       product_weight = null,  
       img_url = null,
-      group_name = "",
+      group_name,
       categories = [],
-      collections = []
+      collections = [],
+      group_id = null  // อาจมีการเปลี่ยนกลุ่ม
     } = await request.json();
 
     // ตรวจสอบว่ามีการส่งค่าที่จำเป็นมาหรือไม่
@@ -178,6 +182,30 @@ export async function PUT(
         success: false, 
         error: "กรุณาระบุ price_origin" 
       }, { status: 400 });
+    }
+
+    // ตรวจสอบกลุ่มสินค้า (ถ้ามีการระบุ)
+    let updatedGroupName = group_name || existingProduct.group_name;
+    let shouldUpdateGroup = false;
+    
+    if (group_id) {
+      const existingGroup = await prisma.group_product.findUnique({
+        where: { id: group_id }
+      });
+      
+      if (!existingGroup) {
+        return NextResponse.json({ 
+          success: false, 
+          error: "ไม่พบกลุ่มสินค้าที่ระบุ" 
+        }, { status: 404 });
+      }
+      
+      // ตรวจสอบว่ากลุ่มเปลี่ยนไปหรือไม่
+      const currentGroupId = existingProduct.product_group[0]?.group_id;
+      shouldUpdateGroup = currentGroupId !== group_id;
+      
+      // ใช้ชื่อกลุ่มจริงเพื่อแสดงผล
+      updatedGroupName = existingGroup.group_name;
     }
 
     // อัปเดตข้อมูลสินค้าด้วย Transaction
@@ -195,11 +223,27 @@ export async function PUT(
           product_heigth,
           product_weight,
           img_url,
-          group_name
+          group_name: updatedGroupName
         }
       });
 
-      // 2. ลบความสัมพันธ์กับหมวดหมู่เดิมแล้วสร้างใหม่
+      // 2. อัปเดตความสัมพันธ์กับกลุ่ม (ถ้ามีการเปลี่ยนแปลง)
+      if (shouldUpdateGroup && group_id) {
+        // ลบความสัมพันธ์เดิม
+        await tx.product_to_group.deleteMany({
+          where: { product_id: productId }
+        });
+        
+        // สร้างความสัมพันธ์ใหม่
+        await tx.product_to_group.create({
+          data: {
+            product_id: productId,
+            group_id: group_id
+          }
+        });
+      }
+
+      // 3. ลบความสัมพันธ์กับหมวดหมู่เดิมแล้วสร้างใหม่
       if (categories.length >= 0) {
         // ลบความสัมพันธ์เดิม
         await tx.product_to_category.deleteMany({
@@ -219,7 +263,7 @@ export async function PUT(
         }
       }
 
-      // 3. ลบความสัมพันธ์กับคอลเลคชันเดิมแล้วสร้างใหม่
+      // 4. ลบความสัมพันธ์กับคอลเลคชันเดิมแล้วสร้างใหม่
       if (collections.length >= 0) {
         // ลบความสัมพันธ์เดิม
         await tx.product_to_collection.deleteMany({
@@ -283,7 +327,7 @@ export async function DELETE(
 
     // ตรวจสอบว่ามีสินค้านี้อยู่จริงหรือไม่
     const existingProduct = await prisma.product.findUnique({
-      where: { id: productId },
+      where: { id: productId }
     });
 
     if (!existingProduct) {
