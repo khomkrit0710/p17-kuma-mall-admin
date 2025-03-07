@@ -1,3 +1,5 @@
+//create: npx prisma migrate dev --name init
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,6 +9,222 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+//<<----------------------Products---------------------->>//
+//   _____                       _                   _          
+//  |  __ \                     | |                 | |         
+//  | |__) |  _ __    ___     __| |  _   _    ___  | |_   ___  
+//  |  ___/  | '__|  / _ \   / _` | | | | |  / __| | __| / __| 
+//  | |      | |    | (_) | | (_| | | |_| | | (__  | |_  \__ \ 
+//  |_|      |_|     \___/   \__,_|  \__,_|  \___|  \__| |___/ 
+//<<----------------------Products---------------------->>//
+ 
+// schema.prisma
+
+model product {
+  id              Int         @id @default(autoincrement())
+  uuid            String      @default(uuid())
+  create_Date     DateTime    @default(now())
+  sku             String      @unique
+  name_sku        String      @default("")
+  quantity        Int         @default(0)
+  make_price      Int?        
+  price_origin    Int         
+  product_width   Int?        
+  product_length  Int?        
+  product_heigth  Int?
+  product_weight  Int?
+  img_url         String?
+  update_date     DateTime    @updatedAt
+  
+  // Relations
+  flash_sale            flash_sale?  
+  product_group         product_to_group[] 
+  product_categories    product_to_category[]
+  product_collections   product_to_collection[]
+  group_name            String      @db.Text @default("") // เก็บไว้สำหรับการแสดงผลเท่านั้น
+}
+
+model group_product {
+  id              Int         @id @default(autoincrement())
+  uuid            String      @default(uuid())
+  create_Date     DateTime    @default(now())
+  group_name      String      @db.Text @default("")
+  main_img_url    String[]    @default([]) 
+  description     String      @db.Text @default("")
+  
+  // Relations
+  products        product_to_group[] 
+}
+
+// ตารางหมวดหมู่สินค้า (Category)
+model category {
+  id              Int         @id @default(autoincrement())
+  uuid            String      @default(uuid())
+  create_Date     DateTime    @default(now())
+  name            String      @unique // ชื่อหมวดหมู่ต้องไม่ซ้ำกัน
+  description     String?     @db.Text
+  
+  // Relations
+  products        product_to_category[]
+}
+
+// ตารางคอลเลคชัน (Collection)
+model collection {
+  id              Int         @id @default(autoincrement())
+  uuid            String      @default(uuid())
+  create_Date     DateTime    @default(now())
+  name            String      @unique // ชื่อคอลเลคชันต้องไม่ซ้ำกัน
+  description     String?     @db.Text
+  
+  // Relations
+  products        product_to_collection[]
+}
+
+// ตารางเชื่อมระหว่าง product และ group_product (many-to-many)
+model product_to_group {
+  product_id      Int
+  group_id        Int
+  
+  product         product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  group           group_product   @relation(fields: [group_id], references: [id])
+  
+  @@id([product_id, group_id])
+  @@index([product_id])
+  @@index([group_id])
+}
+
+// ตารางเชื่อมระหว่าง product และ category (many-to-many)
+model product_to_category {
+  product_id      Int
+  category_id     Int
+  
+  product         product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  category        category        @relation(fields: [category_id], references: [id])
+  
+  @@id([product_id, category_id])
+  @@index([product_id])
+  @@index([category_id])
+}
+
+// ตารางเชื่อมระหว่าง product และ collection (many-to-many)
+model product_to_collection {
+  product_id      Int
+  collection_id   Int
+  
+  product         product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  collection      collection      @relation(fields: [collection_id], references: [id])
+  
+  @@id([product_id, collection_id])
+  @@index([product_id])
+  @@index([collection_id])
+}
+
+model flash_sale {
+  id                Int           @id @default(autoincrement())
+  create_date       DateTime      @default(now())
+  start_date        DateTime    
+  end_date          DateTime    
+  sku               String        @unique 
+  quantity          Int     
+  flash_sale_price  Int
+  flash_sale_per    Int
+  price_origin      Int
+  status            String        @default("active") // สถานะ: active, expired, sold_out  
+  update_date       DateTime      @updatedAt
+  product           product       @relation(fields: [sku], references: [sku], onDelete: Cascade)
+  
+  @@index([sku])   
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//<<----------------------promotion---------------------->>//
+//                                              _     _               
+//   _ __    _ __    ___    _ __ ___     ___   | |_  (_)   ___    _ __  
+//  | '_ \  | '__|  / _ \  | '_ ` _ \   / _ \  | __| | |  / _ \  | '_ \ 
+//  | |_) | | |    | (_) | | | | | | | | (_) | | |_  | | | (_) | | | | |
+//  | .__/  |_|     \___/  |_| |_| |_|  \___/   \__| |_|  \___/  |_| |_|
+//  | |                                                               
+//  |_|                                                               
+//<<----------------------promotion---------------------->>//
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//<<----------------------gernaral---------------------->>//
+//                                                       _ 
+//   __ _    ___   _ __   _ __     __ _   _ __    __ _  | |
+//  / _` |  / _ \ | '__| | '_ \   / _` | | '__|  / _` | | |
+// | (_| | |  __/ | |    | | | | | (_| | | |    | (_| | | |
+//  \__, |  \___| |_|    |_| |_|  \__,_| |_|     \__,_| |_|
+//   __/ |                                                  
+//  |___/                                                   
+//<<----------------------gernaral---------------------->>//
+
+
+
+
+
+
+
+
+
+//<<----------------------user---------------------->>//    
+//                | |  | |
+//                | |  | |  ___   ___  _ __ 
+//                | |  | | / __| / _ \| '__|
+//                | |__| | \__ \|  __/| |
+//                 \____/  |___/ \___||_|
+//<<----------------------user---------------------->>//
+
+
+
+
+
+
+
+
+
+
+//<<----------------------admin---------------------->>//
+//                 _               _         
+//      /\        | |             (_)        
+//     /  \     __| |  _ __ ___    _   _____
+//    / /\ \   / _` | | '_ ` _ \  | | |  __ |
+//   / ____ \ | (_| | | | | | | | | | | | | |  
+//  /_/    \_\ \__,_| |_| |_| |_| |_| |_| |_|
+//<<----------------------admin---------------------->>//
 model accountAdmin {
   id        String    @id @default(cuid())
   name      String?
