@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@font-face {
+  font-family: Minimon;
+  src: url('/fonts/MN MINIMON.ttf');
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Minimon', Arial, Helvetica, sans-serif;
+}
