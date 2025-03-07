@@ -12,8 +12,6 @@ function Sidebar() {
   const isActive = (path: string) => pathname === path;
   const isSuperAdmin = session?.user?.role === 'superadmin';
 
-  // ถ้าไม่มี session ไม่ต้องแสดง sidebar
-  if (!session) return null;
 
   return (
     <div className='bg-[#26292c] text-white min-h-screen'>

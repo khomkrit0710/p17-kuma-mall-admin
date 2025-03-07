@@ -28,25 +28,42 @@ export const authOptions: AuthOptions = {
             email: { label: 'Email', type: 'email', placeholder: 'john@doe.com' },
             password: { label: 'Password', type: 'password' },
         },
-    async authorize(credentials) {
-        if (!credentials) return null
-            const user = await prisma.accountAdmin.findUnique({
-                where: { email: credentials.email },
-            })
-
-        if (user &&
-            (await bcrypt.compare(credentials.password, user.password))
-        ) {
-          return {
-            id: user.id,
-            name: user.name || "",
-            email: user.email,
-            role: user.role
+        async authorize(credentials) {
+          if (!credentials) return null
+              
+          console.log("Login attempt with:", credentials.email);
+          
+          const user = await prisma.accountAdmin.findUnique({
+              where: { email: credentials.email },
+          })
+          
+          if (!user) {
+              console.log("No user found with this email");
+              return null;
           }
-        } else {
-          throw new Error('Invalid email or password')
-        }
-      },
+          
+          console.log("User found:", user.email);
+          
+          try {
+              const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+              console.log("Password valid:", isPasswordValid);
+              
+              if (isPasswordValid) {
+                  return {
+                      id: user.id,
+                      name: user.name || "",
+                      email: user.email,
+                      role: user.role
+                  }
+              } else {
+                  console.log("Invalid password");
+                  return null;
+              }
+          } catch (error) {
+              console.error("Error comparing passwords:", error);
+              return null;
+          }
+      }
     })
     ],
     adapter: PrismaAdapter(prisma),

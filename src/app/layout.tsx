@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/component/Navbar";
-import Sidebar from "@/component/Sidebar";
 import AuthProvider from "@/component/SessionProvider";
 
 export const metadata: Metadata = {
@@ -16,14 +14,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="th">
       <body>
         <AuthProvider>
-          <Navbar />
-          <main className="w-full min-h-screen">
-            {children}
-          </main>
-          <Sidebar />
+          {children}
         </AuthProvider>
       </body>
     </html>
