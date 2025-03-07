@@ -19,6 +19,15 @@ npx prisma migrate dev --name init
 //start
 npm run dev
 
+```
+
+## command check err for deploy
+
+```bash
 //check deploy
 npm run build
+
+//delete cache for reset
+next : Remove-Item -Path .next -Recurse -Force
+
 ```

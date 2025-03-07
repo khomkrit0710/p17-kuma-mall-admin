@@ -32,6 +32,7 @@ export async function GET() {
         const formattedAdmins = admins.map(admin => ({
             id: admin.id,
             username: admin.name || admin.email,
+            email: admin.email,
             role: admin.role,
             createdAt: admin.createdAt
         }))

@@ -1,4 +1,4 @@
-// src/admin/manage/page.tsx
+// src/app/admin/manage/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -6,17 +6,11 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/component/DashboardLayout';
 
-//<<-------------------Type------------------->>
-type CustomUser = {
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-  role: string;
-};
 
 type Admin = {
   id: string;
   username: string;
+  email: string;
   role: string;
   createdAt: string;
 };
@@ -55,7 +49,7 @@ export default function AdminManage() {
   const fetchAdmins = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin');
+      const response = await fetch('/api/auth/admin');
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
@@ -73,7 +67,7 @@ export default function AdminManage() {
   const addNewAdmin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/admin', {
+      const response = await fetch('/api/auth/admin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newAdmin),
@@ -98,10 +92,14 @@ export default function AdminManage() {
     try {
       if (!passwordReset.adminId) return;
       
-      const response = await fetch(`/api/admin/${passwordReset.adminId}`, {
-        method: 'PATCH',
+      // เปลี่ยนเป็นเรียกใช้ API endpoint ใหม่
+      const response = await fetch('/api/auth/admin/reset-password', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: passwordReset.newPassword }),
+        body: JSON.stringify({
+          adminId: passwordReset.adminId,
+          password: passwordReset.newPassword
+        }),
       });
       
       if (!response.ok) {
@@ -114,6 +112,33 @@ export default function AdminManage() {
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
+    }
+  };
+  
+  // เปลี่ยนฟังก์ชันสำหรับลบ admin ให้เรียกใช้ API endpoint ใหม่
+  const deleteAdmin = async (adminId: string) => {
+    if (!confirm('คุณต้องการลบผู้ดูแลระบบนี้ใช่หรือไม่?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/auth/admin/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminId }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'เกิดข้อผิดพลาดในการลบผู้ดูแลระบบ');
+      }
+      
+      // รีเฟรชข้อมูลหลังจากลบสำเร็จ
+      fetchAdmins();
+      alert('ลบผู้ดูแลระบบสำเร็จ');
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบผู้ดูแลระบบ');
     }
   };
 
@@ -208,17 +233,16 @@ export default function AdminManage() {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อผู้ใช้</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">บทบาท</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่สร้าง</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">การจัดการ</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">อีเมล</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">เปลี่ยนรหัสผ่าน</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ลบ</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {admins.map((admin) => (
               <tr key={admin.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{admin.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{admin.username}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -228,7 +252,7 @@ export default function AdminManage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {new Date(admin.createdAt).toLocaleDateString('th-TH')}
+                  {admin.email || 'ไม่ระบุ'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
@@ -237,10 +261,23 @@ export default function AdminManage() {
                       newPassword: '',
                       showForm: true
                     })}
-                    className="text-indigo-600 hover:text-indigo-900 mr-2"
+                    className="text-indigo-600 hover:text-indigo-900"
                   >
                     เปลี่ยนรหัสผ่าน
                   </button>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {/* ไม่แสดงปุ่มลบสำหรับผู้ใช้ปัจจุบัน */}
+                  {admin.id !== session.user?.id ? (
+                    <button
+                      onClick={() => deleteAdmin(admin.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      ลบ
+                    </button>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
                 </td>
               </tr>
             ))}

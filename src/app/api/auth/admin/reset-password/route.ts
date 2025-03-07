@@ -1,3 +1,4 @@
+// src/app/api/auth/admin/reset-password/route.ts
 import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
@@ -6,10 +7,7 @@ import { authOptions } from '@/lib/auth'
 
 const prisma = new PrismaClient()
 
-export async function PATCH(
-    request: NextRequest,
-    { params }: { params: { id: string } }
-) {
+export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
         
@@ -18,11 +16,10 @@ export async function PATCH(
             return Response.json({ error: 'Unauthorized' }, { status: 403 })
         }
         
-        const adminId = params.id
-        const { password } = await request.json()
+        const { adminId, password } = await request.json()
         
-        if (!password) {
-            return Response.json({ error: 'Password is required' }, { status: 400 })
+        if (!adminId || !password) {
+            return Response.json({ error: 'Admin ID and password are required' }, { status: 400 })
         }
         
         // ตรวจสอบว่า admin ที่ต้องการแก้ไขมีอยู่จริง
