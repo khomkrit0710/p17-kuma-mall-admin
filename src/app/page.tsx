@@ -1,4 +1,3 @@
-// app/page.tsx
 'use client';
 
 import { useSession } from 'next-auth/react';
@@ -13,7 +12,7 @@ export default function Home() {
       
       {session ? (
         <div className="bg-white p-6 rounded shadow-md">
-          <h2 className="text-xl font-semibold mb-4">สวัสดี, {session.user.username}</h2>
+          <h2 className="text-xl font-semibold mb-4">สวัสดี, {session.user?.name || session.user?.email}</h2>
           
           <p className="mb-4">
             คุณสามารถจัดการร้านค้าได้โดยใช้เมนูด้านซ้าย เพื่อเข้าถึงฟังก์ชันต่างๆ:
@@ -22,15 +21,15 @@ export default function Home() {
           <ul className="list-disc pl-6 mb-6 space-y-2">
             <li>เพิ่มสินค้าใหม่เข้าสู่ระบบ</li>
             <li>ดูและแก้ไขรายการสินค้าที่มีอยู่</li>
-            {session.user.role === 'SUPER_ADMIN' && (
+            {session.user?.role === 'superadmin' && (
               <li>จัดการผู้ดูแลระบบ (สำหรับ Super Admin เท่านั้น)</li>
             )}
           </ul>
           
           <div className="p-4 bg-blue-50 rounded border border-blue-200">
-            <h3 className="text-lg font-medium text-blue-700 mb-2">สิทธิ์การใช้งานของคุณ: {session.user.role}</h3>
+            <h3 className="text-lg font-medium text-blue-700 mb-2">สิทธิ์การใช้งานของคุณ: {session.user?.role}</h3>
             
-            {session.user.role === 'SUPER_ADMIN' ? (
+            {session.user?.role === 'superadmin' ? (
               <p className="text-blue-600">
                 คุณมีสิทธิ์ Super Admin ซึ่งสามารถเข้าถึงทุกฟังก์ชันในระบบ รวมถึงการจัดการผู้ดูแลระบบอื่นๆ
               </p>
@@ -46,7 +45,12 @@ export default function Home() {
           <p className="text-yellow-700">
             กรุณาเข้าสู่ระบบเพื่อใช้งานระบบหลังบ้าน 
           </p>
-          <Link href={"./login"}> เข้าสู่ระบบ </Link>
+          <Link 
+            href="/login"
+            className="inline-block mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          >
+            เข้าสู่ระบบ
+          </Link>
         </div>
       )}
     </div>

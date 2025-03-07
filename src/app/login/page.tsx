@@ -1,4 +1,3 @@
-// app/login/page.tsx
 "use client";
 
 import React, { useState } from 'react';
@@ -6,7 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,12 +19,12 @@ export default function Login() {
     try {
       const result = await signIn('credentials', {
         redirect: false,
-        username,
+        email,
         password,
       });
 
       if (result?.error) {
-        setError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
       } else {
         router.push('/');
         router.refresh();
@@ -50,15 +49,15 @@ export default function Login() {
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              ชื่อผู้ใช้
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              อีเมล
             </label>
             <input
-              type="text"
-              id="username"
+              type="email"
+              id="email"
               className="w-full p-2 border border-gray-300 rounded"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>

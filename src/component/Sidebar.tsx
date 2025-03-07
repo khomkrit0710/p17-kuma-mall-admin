@@ -1,19 +1,19 @@
-// app/components/Sidebar.tsx
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Session } from 'next-auth';
+import { useSession } from 'next-auth/react';
 
-type SidebarProps = {
-  session: Session | null;
-};
-
-function Sidebar({ session }: SidebarProps) {
+function Sidebar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  
   const isActive = (path: string) => pathname === path;
-  const isSuperAdmin = session?.user?.role === 'SUPER_ADMIN';
+  const isSuperAdmin = session?.user?.role === 'superadmin';
+
+  // ถ้าไม่มี session ไม่ต้องแสดง sidebar
+  if (!session) return null;
 
   return (
     <div className='bg-[#26292c] text-white min-h-screen'>

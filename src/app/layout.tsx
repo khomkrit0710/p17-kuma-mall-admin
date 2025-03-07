@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/component/Navbar";
 import Sidebar from "@/component/Sidebar";
+import AuthProvider from "@/component/SessionProvider";
 
 export const metadata: Metadata = {
   title: 'ระบบหลังบ้าน Kuma-mall',
@@ -17,11 +18,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Navbar session={null} />
-      <main className="w-full min-h-screen">
-        {children}
-      </main>
-        <Sidebar session={null} />
+        <AuthProvider>
+          <Navbar />
+          <main className="w-full min-h-screen">
+            {children}
+          </main>
+          <Sidebar />
+        </AuthProvider>
       </body>
     </html>
   );
