@@ -33,9 +33,10 @@ type Collection = {
   name: string;
 };
 
-export default function AddProduct() {
+export default function EditProduct({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const productId = params.id;
   
   // สถานะสำหรับฟอร์ม
   const [formData, setFormData] = useState<ProductFormData>({
@@ -55,7 +56,8 @@ export default function AddProduct() {
   });
   
   // สถานะสำหรับข้อผิดพลาดและการโหลด
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   
@@ -70,8 +72,54 @@ export default function AddProduct() {
     }
   }, [status, router]);
   
+  // โหลดข้อมูลสินค้าที่ต้องการแก้ไข
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    
+    const fetchProductData = async () => {
+      try {
+        const response = await fetch(`/api/products/${productId}`);
+        
+        if (!response.ok) {
+          throw new Error('ไม่สามารถโหลดข้อมูลสินค้าได้');
+        }
+        
+        const productData = await response.json();
+        
+        // แปลงข้อมูล categories และ collections ให้อยู่ในรูปแบบของ ID สตริง
+        const categoryIds = productData.categories.map((cat: { id: number }) => cat.id.toString());
+        const collectionIds = productData.collections.map((col: { id: number }) => col.id.toString());
+        
+        setFormData({
+          sku: productData.sku,
+          name_sku: productData.name_sku,
+          quantity: productData.quantity,
+          make_price: productData.make_price,
+          price_origin: productData.price_origin,
+          product_width: productData.product_width,
+          product_length: productData.product_length,
+          product_heigth: productData.product_heigth,
+          product_weight: productData.product_weight,
+          img_url: productData.img_url || '',
+          group_name: productData.group_name || '',
+          categories: categoryIds,
+          collections: collectionIds
+        });
+        
+        setLoading(false);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
+        setLoading(false);
+      }
+    };
+    
+    fetchProductData();
+  }, [productId, status]);
+  
   // โหลดข้อมูลหมวดหมู่และคอลเลคชัน
   useEffect(() => {
+    if (status !== 'authenticated') return;
+    
     const fetchCategories = async () => {
       try {
         const response = await fetch('/api/categories');
@@ -98,7 +146,7 @@ export default function AddProduct() {
     
     fetchCategories();
     fetchCollections();
-  }, []);
+  }, [status]);
   
   // จัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -158,13 +206,13 @@ export default function AddProduct() {
   // ส่งข้อมูลฟอร์ม
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
     setError('');
     setSuccess('');
     
     try {
-      const response = await fetch('/api/products', {
-        method: 'POST',
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -174,42 +222,36 @@ export default function AddProduct() {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.error || 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+        throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปเดตสินค้า');
       }
       
-      // รีเซ็ตฟอร์มหลังจากบันทึกสำเร็จ
-      setFormData({
-        sku: '',
-        name_sku: '',
-        quantity: 0,
-        make_price: null,
-        price_origin: 0,
-        product_width: null,
-        product_length: null,
-        product_heigth: null,
-        product_weight: null,
-        img_url: '',
-        group_name: '',
-        categories: [],
-        collections: []
-      });
+      setSuccess('อัปเดตสินค้าสำเร็จ');
       
-      setSuccess('เพิ่มสินค้าสำเร็จ');
+      // รอสักครู่แล้วเปลี่ยนเส้นทางไปหน้ารายการสินค้า
+      setTimeout(() => {
+        router.push('/products/list');
+      }, 1500);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปเดตสินค้า');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
   
-  if (status === 'loading') {
-    return <div className="p-8">กำลังโหลด...</div>;
+  if (status === 'loading' || loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-xl">กำลังโหลดข้อมูล...</div>
+        </div>
+      </DashboardLayout>
+    );
   }
   
   return (
     <DashboardLayout>
       <div className="container mx-auto p-8">
-        <h1 className="text-3xl font-bold mb-6">เพิ่มสินค้าใหม่</h1>
+        <h1 className="text-3xl font-bold mb-6">แก้ไขสินค้า: {formData.name_sku}</h1>
         
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -238,10 +280,12 @@ export default function AddProduct() {
                   id="sku"
                   name="sku"
                   value={formData.sku}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                  required
+                  className="w-full p-2 border border-gray-300 rounded bg-gray-100"
+                  disabled
                 />
+                <p className="text-sm text-gray-500 mt-1">
+                  ไม่สามารถแก้ไข SKU ได้
+                </p>
               </div>
               
               <div>
@@ -332,6 +376,15 @@ export default function AddProduct() {
                   onChange={handleChange}
                   className="w-full p-2 border border-gray-300 rounded"
                 />
+                {formData.img_url && (
+                  <div className="mt-2">
+                    <img 
+                      src={formData.img_url} 
+                      alt="ตัวอย่างรูปภาพ" 
+                      className="w-32 h-32 object-cover border rounded" 
+                    />
+                  </div>
+                )}
               </div>
             </div>
             
@@ -464,9 +517,9 @@ export default function AddProduct() {
             <button
               type="submit"
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-              disabled={loading}
+              disabled={submitting}
             >
-              {loading ? 'กำลังบันทึก...' : 'บันทึกสินค้า'}
+              {submitting ? 'กำลังบันทึก...' : 'บันทึกการเปลี่ยนแปลง'}
             </button>
           </div>
         </form>

@@ -6,14 +6,6 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/component/DashboardLayout';
 
-//<<-------------------Type------------------->>
-type CustomUser = {
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-  role: string;
-};
-
 type Admin = {
   id: string;
   username: string;

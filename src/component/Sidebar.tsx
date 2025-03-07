@@ -34,6 +34,33 @@ function Sidebar() {
             รายการสินค้า
           </Link>
         </li>
+        <li>
+          <Link 
+            href="/categories" 
+            className={`block py-2 px-4 hover:bg-gray-700 ${isActive('/categories') ? 'bg-gray-700' : ''}`} 
+            style={{borderBottom:"2px solid gray"}}
+          >
+            จัดการหมวดหมู่
+          </Link>
+        </li>
+        <li>
+          <Link 
+            href="/collections" 
+            className={`block py-2 px-4 hover:bg-gray-700 ${isActive('/collections') ? 'bg-gray-700' : ''}`} 
+            style={{borderBottom:"2px solid gray"}}
+          >
+            จัดการคอลเลคชัน
+          </Link>
+        </li>
+        <li>
+          <Link 
+            href="/flash-sales" 
+            className={`block py-2 px-4 hover:bg-gray-700 ${isActive('/flash-sales') ? 'bg-gray-700' : ''}`} 
+            style={{borderBottom:"2px solid gray"}}
+          >
+            Flash Sale
+          </Link>
+        </li>
         
         {/* แสดงเฉพาะผู้ใช้ที่มีสิทธิ์ Super Admin */}
         {isSuperAdmin && (
