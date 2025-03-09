@@ -16,7 +16,7 @@ type Category = {
 
 export default function CategoriesPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // สถานะสำหรับรายการหมวดหมู่
   const [categories, setCategories] = useState<Category[]>([]);

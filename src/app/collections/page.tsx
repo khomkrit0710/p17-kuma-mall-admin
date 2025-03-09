@@ -16,7 +16,7 @@ type Collection = {
 
 export default function CollectionsPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // สถานะสำหรับรายการคอลเลคชัน
   const [collections, setCollections] = useState<Collection[]>([]);

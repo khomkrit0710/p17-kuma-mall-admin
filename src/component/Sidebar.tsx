@@ -14,7 +14,7 @@ function Sidebar() {
 
 
   return (
-    <div className='bg-[#26292c] text-white min-h-screen'>
+    <div className='bg-[#26292c] text-white h-full'>
       <ul className='space-y-2'>
         <li>
           <Link 

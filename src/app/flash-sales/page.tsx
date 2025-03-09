@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/component/DashboardLayout';
-
+import Image from 'next/image';
 // กำหนดประเภทของข้อมูล Flash Sale
 type FlashSale = {
   id: number;
@@ -45,7 +45,7 @@ type Pagination = {
 
 export default function FlashSalesPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // สถานะสำหรับข้อมูล Flash Sale
   const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
@@ -100,22 +100,27 @@ export default function FlashSalesPage() {
       setError(null);
       
       try {
-        let queryParams = new URLSearchParams({
-          page: pagination.page.toString(),
-          limit: pagination.limit.toString(),
-        });
         
         if (search) {
-          queryParams.append('search', search);
+          new URLSearchParams({
+            page: pagination.page.toString(),
+            limit: pagination.limit.toString(),
+          }).append('search', search);
         }
         
         if (statusFilter.length > 0) {
           statusFilter.forEach(status => {
-            queryParams.append('status', status);
+            new URLSearchParams({
+              page: pagination.page.toString(),
+              limit: pagination.limit.toString(),
+            }).append('status', status);
           });
         }
         
-        const response = await fetch(`/api/flash-sales?${queryParams.toString()}`);
+        const response = await fetch(`/api/flash-sales?${new URLSearchParams({
+            page: pagination.page.toString(),
+            limit: pagination.limit.toString(),
+          }).toString()}`);
         
         if (!response.ok) {
           throw new Error('ไม่สามารถโหลดข้อมูล Flash Sale ได้');
@@ -397,11 +402,10 @@ export default function FlashSalesPage() {
     const pages = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, pagination.page - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
     
     // ปรับ startPage ถ้า endPage ใกล้สุดท้าย
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) - maxVisiblePages + 1);
     }
     
     // ปุ่มย้อนกลับ
@@ -441,7 +445,7 @@ export default function FlashSalesPage() {
     }
     
     // หน้าในช่วงที่ต้องการแสดง
-    for (let i = startPage; i <= endPage; i++) {
+    for (let i = startPage; i <= Math.min(pagination.totalPages, startPage + maxVisiblePages - 1); i++) {
       pages.push(
         <button
           key={i}
@@ -456,9 +460,9 @@ export default function FlashSalesPage() {
     }
     
     // หน้าสุดท้าย (ถ้าไม่ได้แสดงอยู่แล้ว)
-    if (endPage < pagination.totalPages) {
+    if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) < pagination.totalPages) {
       // แสดงจุดไข่ปลาถ้ามีช่องว่างระหว่างหน้าสุดท้ายที่แสดงกับหน้าสุดท้ายจริง
-      if (endPage < pagination.totalPages - 1) {
+      if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) < pagination.totalPages - 1) {
         pages.push(
           <span key="dots2" className="px-3 py-1">
             ...
@@ -635,7 +639,7 @@ export default function FlashSalesPage() {
         {/* แสดงผลลัพธ์การค้นหา */}
         {search && (
           <div className="mb-4">
-            ผลการค้นหา: <strong>{pagination.total}</strong> รายการ สำหรับคำค้น <strong>"{search}"</strong>
+            ผลการค้นหา: <strong>{pagination.total}</strong> รายการ สำหรับคำค้น <strong>&quot;{search}&quot;</strong>
           </div>
         )}
         
@@ -660,10 +664,13 @@ export default function FlashSalesPage() {
                   <tr key={flashSale.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap">
                       {flashSale.product.img_url ? (
-                        <img 
+                        <Image 
                           src={flashSale.product.img_url} 
                           alt={flashSale.product.name_sku} 
-                          className="w-12 h-12 object-cover rounded border"
+                          width={48}
+                          height={48}
+                          className="object-cover rounded border"
+                          style={{ width: '3rem', height: '3rem' }}
                         />
                       ) : (
                         <div className="w-12 h-12 bg-gray-200 flex items-center justify-center rounded border">
@@ -788,10 +795,12 @@ export default function FlashSalesPage() {
                             >
                               <div className="mr-3">
                                 {product.img_url ? (
-                                  <img
+                                  <Image
                                     src={product.img_url}
                                     alt={product.name_sku}
-                                    className="w-10 h-10 object-cover rounded border"
+                                    width={40}
+                                    height={40}
+                                    className="object-cover rounded border"
                                   />
                                 ) : (
                                   <div className="w-10 h-10 bg-gray-200 flex items-center justify-center rounded border">
@@ -827,10 +836,12 @@ export default function FlashSalesPage() {
                       <div className="flex items-center mb-4">
                         <div className="mr-4">
                           {selectedProduct.img_url ? (
-                            <img
+                            <Image
                               src={selectedProduct.img_url}
                               alt={selectedProduct.name_sku}
-                              className="w-16 h-16 object-cover rounded border"
+                              width={64}
+                              height={64}
+                              className="object-cover rounded border"
                             />
                           ) : (
                             <div className="w-16 h-16 bg-gray-200 flex items-center justify-center rounded border">

@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -19,7 +19,7 @@ export async function GET(
       );
     }
 
-    const productId = parseInt(params.id);
+    const productId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(productId)) {
@@ -123,7 +123,7 @@ export async function GET(
 // ฟังก์ชันสำหรับอัปเดตข้อมูลสินค้า
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -135,7 +135,7 @@ export async function PUT(
       );
     }
 
-    const productId = parseInt(params.id);
+    const productId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(productId)) {
@@ -303,7 +303,7 @@ export async function PUT(
 // ฟังก์ชันสำหรับลบสินค้า
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -315,7 +315,7 @@ export async function DELETE(
       );
     }
 
-    const productId = parseInt(params.id);
+    const productId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(productId)) {

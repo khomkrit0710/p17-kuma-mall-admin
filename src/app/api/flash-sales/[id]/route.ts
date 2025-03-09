@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // ดึงข้อมูล Flash Sale ตาม ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -20,7 +20,7 @@ export async function GET(
       );
     }
 
-    const flashSaleId = parseInt(params.id);
+    const flashSaleId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(flashSaleId)) {
@@ -67,7 +67,7 @@ export async function GET(
 // อัปเดตข้อมูล Flash Sale
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -79,7 +79,7 @@ export async function PUT(
       );
     }
 
-    const flashSaleId = parseInt(params.id);
+    const flashSaleId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(flashSaleId)) {
@@ -167,7 +167,7 @@ export async function PUT(
 // ลบ Flash Sale
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -179,7 +179,7 @@ export async function DELETE(
       );
     }
 
-    const flashSaleId = parseInt(params.id);
+    const flashSaleId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(flashSaleId)) {

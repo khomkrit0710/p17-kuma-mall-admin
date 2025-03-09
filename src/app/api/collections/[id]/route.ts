@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // ดึงข้อมูลคอลเลคชันตาม ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -20,7 +20,7 @@ export async function GET(
       );
     }
 
-    const collectionId = parseInt(params.id);
+    const collectionId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(collectionId)) {
@@ -55,7 +55,7 @@ export async function GET(
 // อัปเดตข้อมูลคอลเลคชัน
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -67,7 +67,7 @@ export async function PUT(
       );
     }
 
-    const collectionId = parseInt(params.id);
+    const collectionId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(collectionId)) {
@@ -139,7 +139,7 @@ export async function PUT(
 // ลบคอลเลคชัน
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -151,7 +151,7 @@ export async function DELETE(
       );
     }
 
-    const collectionId = parseInt(params.id);
+    const collectionId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(collectionId)) {

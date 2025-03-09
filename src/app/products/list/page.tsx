@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import DashboardLayout from '@/component/DashboardLayout';
-
+import Image from 'next/image';
 // กำหนดประเภทข้อมูลกลุ่มสินค้า
 type GroupProduct = {
   id: number;
@@ -38,7 +38,7 @@ type Pagination = {
 
 export default function ProductList() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // สถานะสำหรับรายการกลุ่มสินค้า
   const [groups, setGroups] = useState<GroupProduct[]>([]);
@@ -194,11 +194,10 @@ export default function ProductList() {
     const pages = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, pagination.page - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
     
     // ปรับ startPage ถ้า endPage ใกล้สุดท้าย
-    if (endPage - startPage + 1 < maxVisiblePages) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) - maxVisiblePages + 1);
     }
     
     // ปุ่มย้อนกลับ
@@ -238,7 +237,7 @@ export default function ProductList() {
     }
     
     // หน้าในช่วงที่ต้องการแสดง
-    for (let i = startPage; i <= endPage; i++) {
+    for (let i = startPage; i <= Math.min(pagination.totalPages, startPage + maxVisiblePages - 1); i++) {
       pages.push(
         <button
           key={i}
@@ -253,9 +252,9 @@ export default function ProductList() {
     }
     
     // หน้าสุดท้าย (ถ้าไม่ได้แสดงอยู่แล้ว)
-    if (endPage < pagination.totalPages) {
+    if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) < pagination.totalPages) {
       // แสดงจุดไข่ปลาถ้ามีช่องว่างระหว่างหน้าสุดท้ายที่แสดงกับหน้าสุดท้ายจริง
-      if (endPage < pagination.totalPages - 1) {
+      if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) < pagination.totalPages - 1) {
         pages.push(
           <span key="dots2" className="px-3 py-1">
             ...
@@ -382,7 +381,7 @@ export default function ProductList() {
         {/* แสดงผลลัพธ์การค้นหา */}
         {search && (
           <div className="mb-4">
-            ผลการค้นหา: <strong>{pagination.total}</strong> รายการ สำหรับคำค้น <strong>"{search}"</strong>
+            ผลการค้นหา: <strong>{pagination.total}</strong> รายการ สำหรับคำค้น <strong>&quot;{search}&quot;</strong>
           </div>
         )}
         
@@ -405,10 +404,12 @@ export default function ProductList() {
                   <tr key={group.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap">
                       {group.main_img_url && group.main_img_url.length > 0 ? (
-                        <img 
+                        <Image 
                           src={group.main_img_url[0]} 
-                          alt={group.group_name} 
-                          className="w-12 h-12 object-cover rounded border"
+                          alt={group.group_name}
+                          width={48}
+                          height={48}
+                          className="object-cover rounded border"
                         />
                       ) : (
                         <div className="w-12 h-12 bg-gray-200 flex items-center justify-center rounded border">

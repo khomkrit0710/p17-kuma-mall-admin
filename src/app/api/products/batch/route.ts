@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     // ตรวจสอบการซ้ำของ SKU
-    const skus = products.map((product: any) => product.sku);
+    const skus = products.map((product: { sku: string }) => product.sku);
     const existingProducts = await prisma.product.findMany({
       where: { sku: { in: skus } }
     });

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -26,14 +26,14 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // สร้างเงื่อนไขการค้นหา
-    const whereCondition = search
-      ? {
-          OR: [
-            { group_name: { contains: search, mode: "insensitive" } },
-            { description: { contains: search, mode: "insensitive" } },
-          ],
-        }
-      : {};
+    const whereCondition: Prisma.group_productWhereInput = search
+    ? {
+        OR: [
+          { group_name: { contains: search } },
+          { description: { contains: search } },
+        ],
+      }
+    : {};
 
     // ดึงข้อมูลกลุ่มสินค้าพร้อมความสัมพันธ์
     const groups = await prisma.group_product.findMany({

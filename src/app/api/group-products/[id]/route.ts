@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // ดึงข้อมูลกลุ่มสินค้าตาม ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -20,7 +20,9 @@ export async function GET(
       );
     }
 
-    const groupId = parseInt(params.id);
+    // ต้อง await params ก่อนใช้งาน
+    const { id } = await params;
+    const groupId = parseInt(id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(groupId)) {
@@ -138,7 +140,7 @@ export async function GET(
 // อัปเดตข้อมูลกลุ่มสินค้า
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -150,7 +152,9 @@ export async function PUT(
       );
     }
 
-    const groupId = parseInt(params.id);
+    // ต้อง await params ก่อนใช้งาน
+    const { id } = await params;
+    const groupId = parseInt(id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(groupId)) {
@@ -222,7 +226,7 @@ export async function PUT(
 // ลบกลุ่มสินค้า
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -234,7 +238,9 @@ export async function DELETE(
       );
     }
 
-    const groupId = parseInt(params.id);
+    // ต้อง await params ก่อนใช้งาน
+    const { id } = await params;
+    const groupId = parseInt(id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(groupId)) {

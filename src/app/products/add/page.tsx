@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/component/DashboardLayout';
-
+import Image from 'next/image';
 // กำหนดประเภทของข้อมูลกลุ่มสินค้า
 type GroupProductFormData = {
   group_name: string;
@@ -41,7 +41,7 @@ type Collection = {
 
 export default function AddProductPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // สถานะสำหรับการตรวจสอบขั้นตอนการสร้าง
   const [currentStep, setCurrentStep] = useState<'group' | 'products'>('group');
@@ -73,7 +73,7 @@ export default function AddProductPage() {
   const [createdGroup, setCreatedGroup] = useState<{id: number, uuid: string} | null>(null);
   
   // สถานะสำหรับข้อผิดพลาดและการโหลด
-  const [loading, setLoading] = useState(false);
+
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -134,16 +134,25 @@ export default function AddProductPage() {
   
   // จัดการการเปลี่ยนแปลงข้อมูลสินค้า
   const handleProductChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     
     const updatedProducts = [...productsList];
     
     // จัดการกับค่าตัวเลข
-    if (type === 'number') {
-      updatedProducts[index][name as keyof ProductFormData] = 
-        value === '' ? null : Number(value);
-    } else {
-      updatedProducts[index][name as keyof ProductFormData] = value as never;
+    if (name === 'product_width') {
+      updatedProducts[index].product_width = value === '' ? null : Number(value);
+    } else if (name === 'product_length') {
+      updatedProducts[index].product_length = value === '' ? null : Number(value);
+    } else if (name === 'product_heigth') {
+      updatedProducts[index].product_heigth = value === '' ? null : Number(value);
+    } else if (name === 'product_weight') {
+      updatedProducts[index].product_weight = value === '' ? null : Number(value);
+    } else if (name === 'make_price') {
+      updatedProducts[index].make_price = value === '' ? null : Number(value);
+    } else if (name === 'quantity') {
+      updatedProducts[index].quantity = Number(value);
+    } else if (name === 'price_origin') {
+      updatedProducts[index].price_origin = Number(value);
     }
     
     setProductsList(updatedProducts);
@@ -522,10 +531,12 @@ export default function AddProductPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {groupData.main_img_url.map((url, index) => (
                         <div key={index} className="relative group">
-                          <img 
+                          <Image
                             src={url} 
                             alt={`รูปภาพ ${index + 1}`} 
-                            className="w-24 h-24 object-cover border rounded"
+                            width={96}
+                            height={96}
+                            className="object-cover border rounded"
                           />
                           <button
                             type="button"
@@ -699,10 +710,12 @@ export default function AddProductPage() {
                         
                         {product.img_url && (
                           <div className="mt-2">
-                            <img 
+                            <Image
                               src={product.img_url} 
                               alt={product.name_sku} 
-                              className="w-24 h-24 object-cover border rounded" 
+                              width={96}
+                              height={96}
+                              className="object-cover border rounded" 
                             />
                           </div>
                         )}

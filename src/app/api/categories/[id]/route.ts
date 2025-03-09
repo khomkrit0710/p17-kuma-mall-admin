@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // ดึงข้อมูลหมวดหมู่ตาม ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -20,7 +20,7 @@ export async function GET(
       );
     }
 
-    const categoryId = parseInt(params.id);
+    const categoryId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(categoryId)) {
@@ -55,7 +55,7 @@ export async function GET(
 // อัปเดตข้อมูลหมวดหมู่
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -67,7 +67,7 @@ export async function PUT(
       );
     }
 
-    const categoryId = parseInt(params.id);
+    const categoryId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(categoryId)) {
@@ -139,7 +139,7 @@ export async function PUT(
 // ลบหมวดหมู่
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // ตรวจสอบสิทธิ์การเข้าถึง
@@ -151,7 +151,7 @@ export async function DELETE(
       );
     }
 
-    const categoryId = parseInt(params.id);
+    const categoryId = parseInt((await params).id);
     
     // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(categoryId)) {

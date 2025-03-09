@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
 
     // สร้างเงื่อนไขการค้นหา
-    let whereCondition: any = {};
+    const whereCondition: Record<string, unknown> = {};
     
     if (search) {
       whereCondition.OR = [

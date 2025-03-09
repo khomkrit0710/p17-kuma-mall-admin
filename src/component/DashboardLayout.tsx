@@ -22,7 +22,7 @@ export default function DashboardLayout({
     <>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <div className="flex flex-1">
+        <div className="flex flex-1 h-full">
           <aside className="w-64">
             <Sidebar />
           </aside>
