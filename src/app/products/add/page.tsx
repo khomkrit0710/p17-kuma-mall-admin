@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
+import TagMultiSelect from '@/component/TagMultiSelect';
 // กำหนดประเภทของข้อมูลกลุ่มสินค้า
 type GroupProductFormData = {
   group_name: string;
@@ -69,11 +70,7 @@ export default function AddProductPage() {
     collections: []
   }]);
   
-  // สถานะสำหรับกลุ่มที่สร้างแล้ว (ใช้เก็บข้อมูลหลังจากสร้างกลุ่ม)
-  const [createdGroup, setCreatedGroup] = useState<{id: number, uuid: string} | null>(null);
-  
   // สถานะสำหรับข้อผิดพลาดและการโหลด
-
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
@@ -153,6 +150,12 @@ export default function AddProductPage() {
       updatedProducts[index].quantity = Number(value);
     } else if (name === 'price_origin') {
       updatedProducts[index].price_origin = Number(value);
+    } else {
+      // สำหรับข้อมูลประเภทอื่นๆ (string)
+      updatedProducts[index] = {
+        ...updatedProducts[index],
+        [name]: value
+      };
     }
     
     setProductsList(updatedProducts);
@@ -319,56 +322,43 @@ export default function AddProductPage() {
     setMainImagePreview(updatedPreviews);
   };
   
-  // บันทึกข้อมูลกลุ่มสินค้า
-  const handleGroupSubmit = async (e: React.FormEvent) => {
+  // ไปยังขั้นตอนเพิ่มสินค้า
+  const handleContinueToProducts = () => {
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!groupData.group_name.trim()) {
+      setError('กรุณาระบุชื่อกลุ่มสินค้า');
+      return;
+    }
+    
+    setError('');
+    setCurrentStep('products');
+  };
+  
+  // กลับไปแก้ไขข้อมูลกลุ่มสินค้า
+  const goBackToGroupEdit = () => {
+    setCurrentStep('group');
+  };
+  
+  // ยกเลิกการสร้างกลุ่มสินค้า
+  const cancelGroupCreation = () => {
+    if (confirm('คุณต้องการยกเลิกการสร้างกลุ่มสินค้าใช่หรือไม่?')) {
+      router.push('/products/list');
+    }
+  };
+
+  // บันทึกข้อมูลทั้งหมด (กลุ่มสินค้าและสินค้า)
+  const handleSubmitAll = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
     
     try {
-      // ตรวจสอบข้อมูลที่จำเป็น
+      // 1. ตรวจสอบข้อมูลกลุ่มสินค้า
       if (!groupData.group_name.trim()) {
         throw new Error('กรุณาระบุชื่อกลุ่มสินค้า');
       }
       
-      const response = await fetch('/api/group-products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(groupData),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'เกิดข้อผิดพลาดในการสร้างกลุ่มสินค้า');
-      }
-      
-      // เก็บข้อมูลกลุ่มที่สร้างแล้ว
-      setCreatedGroup({
-        id: data.data.id,
-        uuid: data.data.uuid
-      });
-      
-      setSuccess('สร้างกลุ่มสินค้าสำเร็จ กรุณาเพิ่มสินค้า');
-      setCurrentStep('products');
-      
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างกลุ่มสินค้า');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-  
-  // บันทึกข้อมูลสินค้า
-  const handleProductsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-    
-    try {
-      // ตรวจสอบข้อมูลที่จำเป็น
+      // 2. ตรวจสอบข้อมูลสินค้า
       for (let i = 0; i < productsList.length; i++) {
         const product = productsList[i];
         if (!product.sku.trim()) {
@@ -382,30 +372,47 @@ export default function AddProductPage() {
         }
       }
       
-      // เพิ่ม group_id เข้าไปในข้อมูลสินค้า
+      // 3. สร้างกลุ่มสินค้า
+      const groupResponse = await fetch('/api/group-products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(groupData),
+      });
+      
+      if (!groupResponse.ok) {
+        const groupData = await groupResponse.json();
+        throw new Error(groupData.error || 'เกิดข้อผิดพลาดในการสร้างกลุ่มสินค้า');
+      }
+      
+      const groupResult = await groupResponse.json();
+      const createdGroupId = groupResult.data.id;
+      
+      // 4. เพิ่ม group_id เข้าไปในข้อมูลสินค้า
       const productsWithGroup = productsList.map(product => ({
         ...product,
-        group_id: createdGroup?.id
+        group_id: createdGroupId
       }));
       
-      const response = await fetch('/api/products/batch', {
+      // 5. เพิ่มสินค้าในกลุ่ม
+      const productsResponse = await fetch('/api/products/batch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           products: productsWithGroup,
-          group_id: createdGroup?.id
+          group_id: createdGroupId
         }),
       });
       
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+      if (!productsResponse.ok) {
+        const productsData = await productsResponse.json();
+        throw new Error(productsData.error || 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
       }
       
-      setSuccess('เพิ่มสินค้าสำเร็จ');
+      setSuccess('เพิ่มกลุ่มสินค้าและสินค้าสำเร็จ');
       
       // รอสักครู่แล้วเปลี่ยนเส้นทางไปหน้ารายการสินค้า
       setTimeout(() => {
@@ -413,22 +420,10 @@ export default function AddProductPage() {
       }, 1500);
       
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setSubmitting(false);
     }
-  };
-  
-  // ยกเลิกการสร้างกลุ่มสินค้า
-  const cancelGroupCreation = () => {
-    if (confirm('คุณต้องการยกเลิกการสร้างกลุ่มสินค้าใช่หรือไม่?')) {
-      router.push('/products/list');
-    }
-  };
-  
-  // กลับไปแก้ไขข้อมูลกลุ่มสินค้า
-  const goBackToGroupEdit = async () => {
-    setCurrentStep('group');
   };
   
   if (status === 'loading') {
@@ -472,7 +467,7 @@ export default function AddProductPage() {
         
         {/* ส่วนสร้างกลุ่มสินค้า */}
         {currentStep === 'group' && (
-          <form onSubmit={handleGroupSubmit} className="bg-white p-6 rounded shadow-md">
+          <div className="bg-white p-6 rounded shadow-md">
             <h2 className="text-xl font-semibold mb-4">ข้อมูลกลุ่มสินค้า</h2>
             
             <div className="space-y-4">
@@ -562,24 +557,25 @@ export default function AddProductPage() {
                 ยกเลิก
               </button>
               <button
-                type="submit"
+                type="button"
+                onClick={handleContinueToProducts}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-                disabled={submitting || uploading}
+                disabled={uploading}
               >
-                {submitting ? 'กำลังบันทึก...' : 'บันทึกและเพิ่มสินค้า'}
+                ถัดไป: เพิ่มสินค้า
               </button>
             </div>
-          </form>
+          </div>
         )}
         
         {/* ส่วนเพิ่มสินค้า */}
-        {currentStep === 'products' && createdGroup && (
+        {currentStep === 'products' && (
           <div>
             <div className="bg-blue-50 p-4 rounded border border-blue-200 mb-6">
               <h2 className="text-lg font-semibold mb-2">ข้อมูลกลุ่มสินค้า:</h2>
               <p><strong>ชื่อกลุ่ม:</strong> {groupData.group_name}</p>
               {groupData.description && (
-                <p><strong>คำอธิบาย:</strong> {groupData.description}</p>
+                <p><strong>คำอธิบาย:</strong> <span className="whitespace-pre-line">{groupData.description}</span></p>
               )}
               <div className="mt-2">
                 <button
@@ -592,7 +588,7 @@ export default function AddProductPage() {
               </div>
             </div>
             
-            <form onSubmit={handleProductsSubmit} className="bg-white p-6 rounded shadow-md">
+            <form onSubmit={handleSubmitAll} className="bg-white p-6 rounded shadow-md">
               <h2 className="text-xl font-semibold mb-4">เพิ่มสินค้าในกลุ่ม</h2>
               
               {productsList.map((product, index) => (
@@ -786,54 +782,34 @@ export default function AddProductPage() {
                       
                       {/* หมวดหมู่ */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          หมวดหมู่
-                        </label>
-                        <div className="max-h-40 overflow-y-auto border border-gray-300 rounded p-2">
-                          {categories.length > 0 ? (
-                            categories.map((category) => (
-                              <div key={category.id} className="flex items-center mb-1">
-                                <input
-                                  type="checkbox"
-                                  id={`category-${index}-${category.id}`}
-                                  value={String(category.id)}
-                                  checked={product.categories.includes(String(category.id))}
-                                  onChange={(e) => handleCategoryChange(index, e)}
-                                  className="mr-2"
-                                />
-                                <label htmlFor={`category-${index}-${category.id}`}>{category.name}</label>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-gray-500">ไม่พบหมวดหมู่</p>
-                          )}
-                        </div>
+                        <TagMultiSelect
+                          id={`categories-${index}`}
+                          label="หมวดหมู่"
+                          options={categories}
+                          selectedValues={product.categories}
+                          onChange={(selectedValues) => {
+                            const updatedProducts = [...productsList];
+                            updatedProducts[index].categories = selectedValues;
+                            setProductsList(updatedProducts);
+                          }}
+                          placeholder="เลือกหมวดหมู่..."
+                        />
                       </div>
                       
                       {/* คอลเลคชัน */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          คอลเลคชัน
-                        </label>
-                        <div className="max-h-40 overflow-y-auto border border-gray-300 rounded p-2">
-                          {collections.length > 0 ? (
-                            collections.map((collection) => (
-                              <div key={collection.id} className="flex items-center mb-1">
-                                <input
-                                  type="checkbox"
-                                  id={`collection-${index}-${collection.id}`}
-                                  value={String(collection.id)}
-                                  checked={product.collections.includes(String(collection.id))}
-                                  onChange={(e) => handleCollectionChange(index, e)}
-                                  className="mr-2"
-                                />
-                                <label htmlFor={`collection-${index}-${collection.id}`}>{collection.name}</label>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-gray-500">ไม่พบคอลเลคชัน</p>
-                          )}
-                        </div>
+                        <TagMultiSelect
+                          id={`collections-${index}`}
+                          label="คอลเลคชัน"
+                          options={collections}
+                          selectedValues={product.collections}
+                          onChange={(selectedValues) => {
+                            const updatedProducts = [...productsList];
+                            updatedProducts[index].collections = selectedValues;
+                            setProductsList(updatedProducts);
+                          }}
+                          placeholder="เลือกคอลเลคชัน..."
+                        />
                       </div>
                     </div>
                   </div>
@@ -863,7 +839,7 @@ export default function AddProductPage() {
                   className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
                   disabled={submitting || uploading}
                 >
-                  {submitting ? 'กำลังบันทึก...' : 'บันทึกสินค้าทั้งหมด'}
+                  {submitting ? 'กำลังบันทึก...' : 'บันทึกทั้งหมด'}
                 </button>
               </div>
             </form>

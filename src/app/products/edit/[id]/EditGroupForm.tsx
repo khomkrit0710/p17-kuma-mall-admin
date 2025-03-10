@@ -7,6 +7,7 @@ import Link from 'next/link';
 import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
 import { GroupProductData, ProductData, EditableProductData, Category, Collection } from './types';
+import TagMultiSelect from '@/component/TagMultiSelect';
 
 export default function EditGroupForm({ id }: { id: string }) {
   const router = useRouter();
@@ -1415,54 +1416,34 @@ export default function EditGroupForm({ id }: { id: string }) {
                           
                         {/* หมวดหมู่ */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              หมวดหมู่
-                            </label>
-                            <div className="max-h-40 overflow-y-auto border border-gray-300 rounded p-2">
-                              {categories.length > 0 ? (
-                                categories.map((category) => (
-                                  <div key={category.id} className="flex items-center mb-1">
-                                    <input
-                                      type="checkbox"
-                                      id={`category-${index}-${category.id}`}
-                                      value={String(category.id)}
-                                      checked={product.categories.includes(String(category.id))}
-                                      onChange={(e) => handleCategoryChange(index, e)}
-                                      className="mr-2"
-                                    />
-                                    <label htmlFor={`category-${index}-${category.id}`}>{category.name}</label>
-                                  </div>
-                                ))
-                              ) : (
-                                <p className="text-gray-500">ไม่พบหมวดหมู่</p>
-                              )}
-                            </div>
-                          </div>
+                          <TagMultiSelect
+                            id={`categories-${index}`}
+                            label="หมวดหมู่"
+                            options={categories}
+                            selectedValues={product.categories}
+                            onChange={(selectedValues) => {
+                              const updatedProducts = [...products];
+                              updatedProducts[index].categories = selectedValues;
+                              setProducts(updatedProducts);
+                            }}
+                            placeholder="เลือกหมวดหมู่..."
+                          />
+                        </div>
                           
                           {/* คอลเลคชัน */}
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              คอลเลคชัน
-                            </label>
-                            <div className="max-h-40 overflow-y-auto border border-gray-300 rounded p-2">
-                              {collections.length > 0 ? (
-                                collections.map((collection) => (
-                                  <div key={collection.id} className="flex items-center mb-1">
-                                    <input
-                                      type="checkbox"
-                                      id={`collection-${index}-${collection.id}`}
-                                      value={String(collection.id)}
-                                      checked={product.collections.includes(String(collection.id))}
-                                      onChange={(e) => handleCollectionChange(index, e)}
-                                      className="mr-2"
-                                    />
-                                    <label htmlFor={`collection-${index}-${collection.id}`}>{collection.name}</label>
-                                  </div>
-                                ))
-                              ) : (
-                                <p className="text-gray-500">ไม่พบคอลเลคชัน</p>
-                              )}
-                            </div>
+                            <TagMultiSelect
+                              id={`collections-${index}`}
+                              label="คอลเลคชัน"
+                              options={collections}
+                              selectedValues={product.collections}
+                              onChange={(selectedValues) => {
+                                const updatedProducts = [...products];
+                                updatedProducts[index].collections = selectedValues;
+                                setProducts(updatedProducts);
+                              }}
+                              placeholder="เลือกคอลเลคชัน..."
+                            />
                           </div>
                         </div>
                       </div>
