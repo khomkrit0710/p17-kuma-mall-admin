@@ -1,4 +1,3 @@
-// src/app/admin/manage/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -91,8 +90,7 @@ export default function AdminManage() {
     e.preventDefault();
     try {
       if (!passwordReset.adminId) return;
-      
-      // เปลี่ยนเป็นเรียกใช้ API endpoint ใหม่
+
       const response = await fetch('/api/auth/admin/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,8 +112,7 @@ export default function AdminManage() {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน');
     }
   };
-  
-  // เปลี่ยนฟังก์ชันสำหรับลบ admin ให้เรียกใช้ API endpoint ใหม่
+
   const deleteAdmin = async (adminId: string) => {
     if (!confirm('คุณต้องการลบผู้ดูแลระบบนี้ใช่หรือไม่?')) {
       return;
@@ -132,8 +129,7 @@ export default function AdminManage() {
         const errorData = await response.json();
         throw new Error(errorData.message || 'เกิดข้อผิดพลาดในการลบผู้ดูแลระบบ');
       }
-      
-      // รีเฟรชข้อมูลหลังจากลบสำเร็จ
+
       fetchAdmins();
       alert('ลบผู้ดูแลระบบสำเร็จ');
       setError('');
@@ -227,8 +223,7 @@ export default function AdminManage() {
           </form>
         </div>
       )}
-      
-      {/* แสดงรายชื่อ Admin ทั้งหมด */}
+
       <div className="bg-white rounded shadow overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -267,7 +262,6 @@ export default function AdminManage() {
                   </button>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {/* ไม่แสดงปุ่มลบสำหรับผู้ใช้ปัจจุบัน */}
                   {admin.id !== session.user?.id ? (
                     <button
                       onClick={() => deleteAdmin(admin.id)}
@@ -284,8 +278,7 @@ export default function AdminManage() {
           </tbody>
         </table>
       </div>
-      
-      {/* แบบฟอร์มเปลี่ยนรหัสผ่าน */}
+
       {passwordReset.showForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-6 rounded shadow-md w-full max-w-md">

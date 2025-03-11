@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
-// กำหนดประเภทของข้อมูล Flash Sale
+
+    //<<-------------------Type------------------->>
 type FlashSale = {
   id: number;
   sku: string;
@@ -25,7 +26,6 @@ type FlashSale = {
   };
 };
 
-// กำหนดประเภทของข้อมูลสินค้า
 type Product = {
   id: number;
   sku: string;
@@ -35,7 +35,6 @@ type Product = {
   img_url: string | null;
 };
 
-// กำหนดประเภทของข้อมูล pagination
 type Pagination = {
   total: number;
   page: number;
@@ -44,30 +43,19 @@ type Pagination = {
 };
 
 export default function FlashSalesPage() {
+
+    //<<-------------------State------------------->>
   const router = useRouter();
   const { status } = useSession();
-  
-  // สถานะสำหรับข้อมูล Flash Sale
   const [flashSales, setFlashSales] = useState<FlashSale[]>([]);
-  const [pagination, setPagination] = useState<Pagination>({
-    total: 0,
-    page: 1,
-    limit: 10,
-    totalPages: 0,
-  });
-  
-  // สถานะสำหรับการกรอง (filter)
+  const [pagination, setPagination] = useState<Pagination>({total: 0,page: 1,limit: 10,totalPages: 0,});
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  
-  // สถานะสำหรับ popup เพิ่ม Flash Sale
   const [showAddPopup, setShowAddPopup] = useState(false);
   const [searchProducts, setSearchProducts] = useState<Product[]>([]);
   const [productSearch, setProductSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
-  // สถานะสำหรับข้อมูล Flash Sale ใหม่
   const [newFlashSale, setNewFlashSale] = useState({
     sku: '',
     start_date: '',
@@ -77,37 +65,34 @@ export default function FlashSalesPage() {
     flash_sale_per: 0,
     price_origin: 0,
   });
-  
-  // สถานะสำหรับการโหลดและข้อผิดพลาด
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
-  // ตรวจสอบการเข้าสู่ระบบ
+
+    //<<-------------------useEffect------------------->>
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-  
-  // โหลดข้อมูล Flash Sale
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     
     const fetchFlashSales = async () => {
       setLoading(true);
       setError(null);
-      
       try {
-        
+
         if (search) {
           new URLSearchParams({
             page: pagination.page.toString(),
             limit: pagination.limit.toString(),
           }).append('search', search);
         }
-        
+
         if (statusFilter.length > 0) {
           statusFilter.forEach(status => {
             new URLSearchParams({
@@ -116,17 +101,18 @@ export default function FlashSalesPage() {
             }).append('status', status);
           });
         }
-        
+
         const response = await fetch(`/api/flash-sales?${new URLSearchParams({
             page: pagination.page.toString(),
             limit: pagination.limit.toString(),
           }).toString()}`);
-        
+
         if (!response.ok) {
           throw new Error('ไม่สามารถโหลดข้อมูล Flash Sale ได้');
         }
-        
+
         const data = await response.json();
+
         setFlashSales(data.data);
         setPagination(data.pagination);
       } catch (err) {
@@ -139,8 +125,7 @@ export default function FlashSalesPage() {
     
     fetchFlashSales();
   }, [pagination.page, pagination.limit, search, statusFilter, status]);
-  
-  // ค้นหาสินค้าสำหรับเพิ่ม Flash Sale
+
   useEffect(() => {
     if (!showAddPopup || !productSearch) {
       setSearchProducts([]);
@@ -169,42 +154,35 @@ export default function FlashSalesPage() {
     
     return () => clearTimeout(debounce);
   }, [productSearch, showAddPopup]);
-  
-  // จัดการการเปลี่ยนหน้า
+
   const handlePageChange = (newPage: number) => {
     setPagination({ ...pagination, page: newPage });
   };
-  
-  // จัดการการค้นหา
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
-    setPagination({ ...pagination, page: 1 }); // รีเซ็ตกลับไปหน้าแรกเมื่อค้นหา
+    setPagination({ ...pagination, page: 1 });
   };
-  
-  // จัดการการเปลี่ยนจำนวนรายการต่อหน้า
+
   const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLimit = parseInt(e.target.value);
     setPagination({ ...pagination, page: 1, limit: newLimit });
   };
-  
-  // จัดการการเปลี่ยนแปลงการกรอง (filter) สถานะ
+
   const handleStatusFilterChange = (status: string) => {
     if (statusFilter.includes(status)) {
       setStatusFilter(statusFilter.filter(s => s !== status));
     } else {
       setStatusFilter([...statusFilter, status]);
     }
-    setPagination({ ...pagination, page: 1 }); // รีเซ็ตกลับไปหน้าแรกเมื่อเปลี่ยนการกรอง
+    setPagination({ ...pagination, page: 1 });
   };
-  
-  // เลือกสินค้าสำหรับเพิ่ม Flash Sale
+
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
     setProductSearch('');
     setSearchProducts([]);
-    
-    // ตั้งค่าข้อมูลเริ่มต้นสำหรับ Flash Sale
     setNewFlashSale({
       sku: product.sku,
       start_date: new Date().toISOString().split('T')[0], // วันนี้
@@ -215,17 +193,14 @@ export default function FlashSalesPage() {
       price_origin: product.price_origin,
     });
   };
-  
-  // คำนวณราคาส่วนลดหรือเปอร์เซ็นต์ส่วนลด
+
   const calculateDiscount = (type: 'price' | 'percent', value: number) => {
     if (type === 'price') {
-      // คำนวณเปอร์เซ็นต์ส่วนลดจากราคาส่วนลด
       const discountPercent = Math.round(((newFlashSale.price_origin - value) / newFlashSale.price_origin) * 100);
-      return Math.max(0, Math.min(discountPercent, 100)); // ป้องกันไม่ให้น้อยกว่า 0 หรือมากกว่า 100
+      return Math.max(0, Math.min(discountPercent, 100));
     } else {
-      // คำนวณราคาส่วนลดจากเปอร์เซ็นต์ส่วนลด
       const discountPrice = Math.round(newFlashSale.price_origin * (1 - value / 100));
-      return Math.max(0, discountPrice); // ป้องกันไม่ให้น้อยกว่า 0
+      return Math.max(0, discountPrice);
     }
   };
   

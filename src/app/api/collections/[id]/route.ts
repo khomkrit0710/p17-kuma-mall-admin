@@ -5,14 +5,13 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-// ดึงข้อมูลคอลเลคชันตาม ID
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -21,8 +20,7 @@ export async function GET(
     }
 
     const collectionId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(collectionId)) {
       return NextResponse.json(
         { error: "รหัสคอลเลคชันไม่ถูกต้อง" },
@@ -30,7 +28,6 @@ export async function GET(
       );
     }
 
-    // ดึงข้อมูลคอลเลคชัน
     const collection = await prisma.collection.findUnique({
       where: { id: collectionId }
     });
@@ -52,14 +49,14 @@ export async function GET(
   }
 }
 
-// อัปเดตข้อมูลคอลเลคชัน
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
+
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -68,8 +65,7 @@ export async function PUT(
     }
 
     const collectionId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(collectionId)) {
       return NextResponse.json(
         { error: "รหัสคอลเลคชันไม่ถูกต้อง" },
@@ -77,7 +73,6 @@ export async function PUT(
       );
     }
 
-    // ตรวจสอบว่ามีคอลเลคชันนี้อยู่จริงหรือไม่
     const existingCollection = await prisma.collection.findUnique({
       where: { id: collectionId }
     });
@@ -98,7 +93,6 @@ export async function PUT(
       );
     }
 
-    // ตรวจสอบว่ามีคอลเลคชันชื่อซ้ำหรือไม่
     const duplicateName = await prisma.collection.findFirst({
       where: {
         name,
@@ -113,7 +107,6 @@ export async function PUT(
       );
     }
 
-    // อัปเดตข้อมูลคอลเลคชัน
     const updatedCollection = await prisma.collection.update({
       where: { id: collectionId },
       data: {
@@ -136,14 +129,13 @@ export async function PUT(
   }
 }
 
-// ลบคอลเลคชัน
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -152,8 +144,7 @@ export async function DELETE(
     }
 
     const collectionId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(collectionId)) {
       return NextResponse.json(
         { error: "รหัสคอลเลคชันไม่ถูกต้อง" },
@@ -161,7 +152,6 @@ export async function DELETE(
       );
     }
 
-    // ตรวจสอบว่ามีคอลเลคชันนี้อยู่จริงหรือไม่
     const existingCollection = await prisma.collection.findUnique({
       where: { id: collectionId }
     });
@@ -173,7 +163,6 @@ export async function DELETE(
       );
     }
 
-    // ลบคอลเลคชัน
     await prisma.collection.delete({
       where: { id: collectionId }
     });
@@ -184,8 +173,7 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Error deleting collection:", error);
-    
-    // ตรวจสอบว่าเป็นข้อผิดพลาดจากการมีความสัมพันธ์กับสินค้าหรือไม่
+
     if (error instanceof Error && error.message.includes('Foreign key constraint failed')) {
       return NextResponse.json(
         { error: "ไม่สามารถลบคอลเลคชันนี้ได้ เนื่องจากมีสินค้าที่เกี่ยวข้อง กรุณาลบความสัมพันธ์ก่อน" },

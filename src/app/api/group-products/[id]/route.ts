@@ -5,13 +5,11 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-// ดึงข้อมูลกลุ่มสินค้าตาม ID
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -22,8 +20,7 @@ export async function GET(
 
     const { id } = await params;
     const groupId = parseInt(id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(groupId)) {
       return NextResponse.json(
         { error: "รหัสกลุ่มสินค้าไม่ถูกต้อง" },
@@ -53,16 +50,6 @@ export async function GET(
                 group_name: true,
                 create_Date: true,
                 update_date: true,
-                product_categories: {
-                  include: {
-                    category: true
-                  }
-                },
-                product_collections: {
-                  include: {
-                    collection: true
-                  }
-                },
                 flash_sale: true
               }
             }
@@ -88,20 +75,17 @@ export async function GET(
       );
     }
 
-    // จัดรูปแบบข้อมูลเพื่อส่งกลับไปยังไคลเอนต์
     const formattedProducts = group.products.map(relation => {
       const product = relation.product;
-      
-      // จัดรูปแบบหมวดหมู่
-      const categories = product.product_categories.map(pc => ({
-        id: pc.category.id,
-        name: pc.category.name
+
+      const categories = group.group_categories.map(gc => ({
+        id: gc.category.id,
+        name: gc.category.name
       }));
       
-      // จัดรูปแบบคอลเลคชัน
-      const collections = product.product_collections.map(pc => ({
-        id: pc.collection.id,
-        name: pc.collection.name
+      const collections = group.group_collections.map(gc => ({
+        id: gc.collection.id,
+        name: gc.collection.name
       }));
 
       return {
@@ -126,19 +110,16 @@ export async function GET(
       };
     });
 
-    // จัดรูปแบบหมวดหมู่ของกลุ่ม
     const groupCategories = group.group_categories.map(gc => ({
       id: gc.category.id,
       name: gc.category.name
     }));
 
-    // จัดรูปแบบคอลเลคชันของกลุ่ม
     const groupCollections = group.group_collections.map(gc => ({
       id: gc.collection.id,
       name: gc.collection.name
     }));
 
-    // ส่งข้อมูลกลับไปยังไคลเอนต์
     return NextResponse.json({
       id: group.id,
       uuid: group.uuid,
@@ -159,13 +140,11 @@ export async function GET(
   }
 }
 
-// อัปเดตข้อมูลกลุ่มสินค้า
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -176,8 +155,7 @@ export async function PUT(
 
     const { id } = await params;
     const groupId = parseInt(id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(groupId)) {
       return NextResponse.json(
         { error: "รหัสกลุ่มสินค้าไม่ถูกต้อง" },
@@ -185,7 +163,6 @@ export async function PUT(
       );
     }
 
-    // ตรวจสอบว่ามีกลุ่มสินค้านี้อยู่จริงหรือไม่
     const existingGroup = await prisma.group_product.findUnique({
       where: { id: groupId }
     });
@@ -287,7 +264,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -298,8 +274,7 @@ export async function DELETE(
 
     const { id } = await params;
     const groupId = parseInt(id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(groupId)) {
       return NextResponse.json(
         { error: "รหัสกลุ่มสินค้าไม่ถูกต้อง" },
@@ -307,7 +282,6 @@ export async function DELETE(
       );
     }
 
-    // ตรวจสอบว่ามีกลุ่มสินค้านี้อยู่จริงหรือไม่
     const existingGroup = await prisma.group_product.findUnique({
       where: { id: groupId },
       include: {
@@ -322,29 +296,24 @@ export async function DELETE(
       );
     }
 
-    // ทำ transaction เพื่อลบข้อมูลที่เกี่ยวข้องทั้งหมด
     await prisma.$transaction(async (tx) => {
-      // ดึงรายการ product_id ที่อยู่ในกลุ่มนี้
       const productRelations = await tx.product_to_group.findMany({
         where: { group_id: groupId },
         select: { product_id: true }
       });
       
       const productIds = productRelations.map(rel => rel.product_id);
-      
-      // ลบความสัมพันธ์ระหว่างสินค้ากับกลุ่มสินค้า
+
       await tx.product_to_group.deleteMany({
         where: { group_id: groupId }
       });
-      
-      // ลบสินค้าที่อยู่ในกลุ่มนี้
+
       if (productIds.length > 0) {
         await tx.product.deleteMany({
           where: { id: { in: productIds } }
         });
       }
-      
-      // ลบกลุ่มสินค้า
+
       await tx.group_product.delete({
         where: { id: groupId }
       });

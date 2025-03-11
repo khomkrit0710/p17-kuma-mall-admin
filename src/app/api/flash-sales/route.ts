@@ -5,11 +5,10 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-// ดึงข้อมูล Flash Sale ทั้งหมด
 export async function GET(request: Request) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -21,13 +20,8 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
-    
-    // สถานะที่เลือก
     const statusParams = searchParams.getAll("status");
-    
     const skip = (page - 1) * limit;
-
-    // สร้างเงื่อนไขการค้นหา
     const whereCondition: Record<string, unknown> = {};
     
     if (search) {
@@ -43,7 +37,6 @@ export async function GET(request: Request) {
       };
     }
 
-    // ดึงข้อมูล Flash Sale พร้อมข้อมูลสินค้า
     const flashSales = await prisma.flash_sale.findMany({
       where: whereCondition,
       include: {
@@ -62,7 +55,6 @@ export async function GET(request: Request) {
       take: limit
     });
 
-    // นับจำนวน Flash Sale ทั้งหมด
     const totalFlashSales = await prisma.flash_sale.count({
       where: whereCondition
     });
@@ -87,11 +79,10 @@ export async function GET(request: Request) {
   }
 }
 
-// สร้าง Flash Sale ใหม่
 export async function POST(request: Request) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -110,7 +101,6 @@ export async function POST(request: Request) {
       status = "active"
     } = await request.json();
 
-    // ตรวจสอบข้อมูลที่จำเป็น
     if (!sku || !start_date || !end_date || quantity === undefined || flash_sale_price === undefined || price_origin === undefined || flash_sale_per === undefined) {
       return NextResponse.json(
         { error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
@@ -118,7 +108,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // ตรวจสอบว่ามีสินค้านี้อยู่จริงหรือไม่
     const existingProduct = await prisma.product.findUnique({
       where: { sku }
     });
@@ -130,7 +119,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // ตรวจสอบว่ามี Flash Sale สำหรับสินค้านี้อยู่แล้วหรือไม่
     const existingFlashSale = await prisma.flash_sale.findUnique({
       where: { sku }
     });
@@ -142,21 +130,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // กำหนดสถานะ Flash Sale โดยอัตโนมัติ
     let calculatedStatus = status;
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
     const now = new Date();
 
     if (startDate > now) {
-      calculatedStatus = "pending"; // กำลังจะเริ่ม
+      calculatedStatus = "pending"; 
     } else if (endDate < now) {
-      calculatedStatus = "expired"; // หมดเวลา
+      calculatedStatus = "expired";
     } else {
-      calculatedStatus = "active"; // กำลังดำเนินการ
+      calculatedStatus = "active";
     }
 
-    // สร้าง Flash Sale ใหม่
     const newFlashSale = await prisma.flash_sale.create({
       data: {
         sku,

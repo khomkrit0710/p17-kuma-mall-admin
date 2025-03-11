@@ -11,8 +11,6 @@ export default function EditGroupForm({ id }: { id: string }) {
   const router = useRouter();
   const { status } = useSession();
   const groupId = id;
-  
-  // สถานะสำหรับข้อมูลกลุ่มสินค้า
   const [groupData, setGroupData] = useState<GroupProductData | null>(null);
   const [editedGroupData, setEditedGroupData] = useState<{
     group_name: string;
@@ -23,11 +21,7 @@ export default function EditGroupForm({ id }: { id: string }) {
     description: '',
     main_img_url: []
   });
-  
-  // สถานะสำหรับการแก้ไขสินค้า
   const [products, setProducts] = useState<EditableProductData[]>([]);
-  
-  // สถานะสำหรับเพิ่มสินค้าใหม่
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [newProduct, setNewProduct] = useState<Omit<EditableProductData, 'id' | 'isEditing' | 'isDeleting'>>({
     sku: '',
@@ -43,38 +37,24 @@ export default function EditGroupForm({ id }: { id: string }) {
     categories: [],
     collections: []
   });
-  
-  // สถานะสำหรับหมวดหมู่และคอลเลคชัน
   const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-
-  // สถานะสำหรับหมวดหมู่และคอลเลคชันของกลุ่ม
   const [groupCategories, setGroupCategories] = useState<string[]>([]);
   const [groupCollections, setGroupCollections] = useState<string[]>([]);
-  
-  // สถานะสำหรับการโหลดและข้อผิดพลาด
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
-  
-  // สถานะสำหรับการแก้ไขกลุ่ม
   const [isEditingGroup, setIsEditingGroup] = useState(false);
-  
-  // สถานะสำหรับ dialog ลบกลุ่ม
   const [showDeleteGroupDialog, setShowDeleteGroupDialog] = useState(false);
-  
-  // สถานะสำหรับการอัปโหลดรูปภาพ
   const [uploading, setUploading] = useState(false);
-  
-  // ตรวจสอบการเข้าสู่ระบบ
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-  
-  // โหลดข้อมูลกลุ่มสินค้าและสินค้าในกลุ่ม
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     
@@ -88,28 +68,25 @@ export default function EditGroupForm({ id }: { id: string }) {
         
         const data = await response.json();
         setGroupData(data);
-        
-        // ตั้งค่าข้อมูลกลุ่มสำหรับการแก้ไข
+
         setEditedGroupData({
           group_name: data.group_name,
           description: data.description || '',
           main_img_url: Array.isArray(data.main_img_url) ? data.main_img_url : []
         });
-        
-        // ตั้งค่าหมวดหมู่และคอลเลคชันของกลุ่ม - แก้ไขจุดที่อาจเกิดข้อผิดพลาด
+
         if (data.categories && Array.isArray(data.categories)) {
-          setGroupCategories(data.categories.map((cat: { id: { toString: () => any; }; }) => cat.id.toString()));
+          setGroupCategories(data.categories.map((cat: { id: { toString: () => string } }): string => cat.id.toString()));
         } else {
           setGroupCategories([]);
         }
         
         if (data.collections && Array.isArray(data.collections)) {
-          setGroupCollections(data.collections.map((col: { id: { toString: () => any; }; }) => col.id.toString()));
+          setGroupCollections(data.collections.map((col: { id: { toString: () => string } }): string => col.id.toString()));
         } else {
           setGroupCollections([]);
         }
-        
-        // แปลงข้อมูลสินค้าให้เหมาะกับการแก้ไข
+
         if (data.products && Array.isArray(data.products)) {
           const formattedProducts = data.products.map((product: ProductData) => ({
             id: product.id,
@@ -123,12 +100,8 @@ export default function EditGroupForm({ id }: { id: string }) {
             product_heigth: product.product_heigth,
             product_weight: product.product_weight,
             img_url: product.img_url,
-            categories: Array.isArray(product.categories) 
-              ? product.categories.map(cat => cat.id.toString())
-              : [],
-            collections: Array.isArray(product.collections) 
-              ? product.collections.map(col => col.id.toString())
-              : [],
+            categories: data.categories.map((cat: { id: { toString: () => string } }): string => cat.id.toString()),
+            collections: data.collections.map((col: { id: { toString: () => string } }): string => col.id.toString()),
             isEditing: false,
             isDeleting: false
           }));
@@ -145,8 +118,7 @@ export default function EditGroupForm({ id }: { id: string }) {
     
     fetchGroupData();
   }, [groupId, status]);
-  
-  // โหลดข้อมูลหมวดหมู่และคอลเลคชัน
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -175,8 +147,7 @@ export default function EditGroupForm({ id }: { id: string }) {
     fetchCategories();
     fetchCollections();
   }, []);
-  
-  // จัดการการเปลี่ยนแปลงข้อมูลกลุ่มสินค้า
+
   const handleGroupChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEditedGroupData({
@@ -184,15 +155,11 @@ export default function EditGroupForm({ id }: { id: string }) {
       [name]: value
     });
   };
-  
-  // จัดการการเปลี่ยนแปลงข้อมูลสินค้า
   const handleProductChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
     const updatedProducts = [...products];
     const product = {...updatedProducts[index]};
-    
-    // จัดการกับค่าตัวเลข
+
     if (type === 'number') {
       switch(name) {
         case 'quantity':
@@ -217,11 +184,7 @@ export default function EditGroupForm({ id }: { id: string }) {
           product.product_weight = value === '' ? null : Number(value);
           break;
       }
-    } else if (name === 'categories' || name === 'collections') {
-      // จัดการกับรายการ ID
-      product[name] = Array.isArray(value) ? value : [];
     } else {
-      // สำหรับช่องข้อความ (ไม่ใช่ตัวเลข)
       switch(name) {
         case 'name_sku':
           product.name_sku = value;
@@ -238,33 +201,22 @@ export default function EditGroupForm({ id }: { id: string }) {
     updatedProducts[index] = product;
     setProducts(updatedProducts);
   };
-  
-  // จัดการการเปลี่ยนแปลงข้อมูลสินค้าใหม่
   const handleNewProductChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
-    if (name === 'categories' || name === 'collections') {
-      // จัดการกับรายการ ID
-      setNewProduct({
-        ...newProduct,
-        [name]: Array.isArray(value) ? value : []
-      });
-    } else if (type === 'number') {
-      // จัดการกับค่าตัวเลข
+    if (type === 'number') {
       setNewProduct({
         ...newProduct,
         [name]: value === '' ? null : Number(value)
       });
     } else {
-      // จัดการกับค่าข้อความ
       setNewProduct({
         ...newProduct,
         [name]: value
       });
     }
   };
-  
-  // อัปโหลดรูปภาพหลักของกลุ่มสินค้า
+
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -285,8 +237,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
       }
-      
-      // เพิ่ม URL รูปภาพใหม่เข้าไปในอาร์เรย์
+
       const newImageUrl = data.url;
       setEditedGroupData({
         ...editedGroupData,
@@ -299,8 +250,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       setUploading(false);
     }
   };
-  
-  // อัปโหลดรูปภาพสินค้า
+
   const handleProductImageUpload = async (productIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -321,8 +271,6 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
       }
-      
-      // อัปเดตรูปภาพของสินค้า
       const updatedProducts = [...products];
       updatedProducts[productIndex].img_url = data.url;
       setProducts(updatedProducts);
@@ -333,8 +281,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       setUploading(false);
     }
   };
-  
-  // อัปโหลดรูปภาพสินค้าใหม่
+
   const handleNewProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -355,8 +302,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
       }
-      
-      // อัปเดตรูปภาพของสินค้าใหม่
+
       setNewProduct({
         ...newProduct,
         img_url: data.url
@@ -368,8 +314,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       setUploading(false);
     }
   };
-  
-  // ลบรูปภาพหลักของกลุ่มสินค้า
+
   const removeMainImage = (index: number) => {
     const updatedImages = [...editedGroupData.main_img_url];
     updatedImages.splice(index, 1);
@@ -379,33 +324,29 @@ export default function EditGroupForm({ id }: { id: string }) {
       main_img_url: updatedImages
     });
   };
-  
-  // เปิด/ปิดโหมดแก้ไขสินค้า
+
   const toggleEditProduct = (index: number) => {
     const updatedProducts = [...products];
     updatedProducts[index].isEditing = !updatedProducts[index].isEditing;
     setProducts(updatedProducts);
   };
-  
-  // เปิด/ปิดโหมดการลบสินค้า
+
   const toggleDeleteProduct = (index: number) => {
     const updatedProducts = [...products];
     updatedProducts[index].isDeleting = !updatedProducts[index].isDeleting;
     setProducts(updatedProducts);
   };
-  
-  // บันทึกการแก้ไขกลุ่มสินค้า
+
   const saveGroupEdit = async () => {
     setSubmitting(true);
     setError('');
     
     try {
-      // ตรวจสอบข้อมูลที่จำเป็น
+
       if (!editedGroupData.group_name.trim()) {
         throw new Error('กรุณาระบุชื่อกลุ่มสินค้า');
       }
-      
-      // สร้างข้อมูลสำหรับส่งไปยัง API
+  
       const dataToSend = {
         ...editedGroupData,
         categories: groupCategories,
@@ -425,10 +366,8 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปเดตกลุ่มสินค้า');
       }
-      
-      // อัปเดตข้อมูลกลุ่มในหน้าจอ
+
       if (groupData) {
-        // จัดเตรียมข้อมูลหมวดหมู่และคอลเลคชันที่เลือก
         const formattedCategories = categories
           .filter(cat => groupCategories.includes(cat.id.toString()))
           .map(cat => ({ id: cat.id, name: cat.name }));
@@ -445,31 +384,36 @@ export default function EditGroupForm({ id }: { id: string }) {
           categories: formattedCategories,
           collections: formattedCollections
         });
+
+        const updatedProducts = products.map(product => ({
+          ...product,
+          categories: groupCategories,
+          collections: groupCollections
+        }));
+        
+        setProducts(updatedProducts);
       }
       
       setSuccess('บันทึกการแก้ไขกลุ่มสินค้าสำเร็จ');
       setIsEditingGroup(false);
-      
-      // ลบข้อความสำเร็จหลัง 3 วินาที
+
       setTimeout(() => {
         setSuccess('');
-      }, 3000);
+      }, 2000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึกการแก้ไข');
     } finally {
       setSubmitting(false);
     }
   };
-  
-  // บันทึกการแก้ไขสินค้า
+
   const saveProductEdit = async (index: number) => {
     setSubmitting(true);
     setError('');
     
     try {
       const product = products[index];
-      
-      // ตรวจสอบข้อมูลที่จำเป็น
+
       if (!product.name_sku.trim()) {
         throw new Error('กรุณาระบุชื่อสินค้า');
       }
@@ -477,7 +421,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (product.price_origin <= 0) {
         throw new Error('กรุณาระบุราคาขายที่มากกว่า 0');
       }
-      
+
       const productData = {
         name_sku: product.name_sku,
         quantity: product.quantity,
@@ -487,9 +431,7 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_length: product.product_length,
         product_heigth: product.product_heigth,
         product_weight: product.product_weight,
-        img_url: product.img_url,
-        categories: product.categories,
-        collections: product.collections
+        img_url: product.img_url
       };
       
       const response = await fetch(`/api/products/${product.id}`, {
@@ -505,33 +447,29 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปเดตสินค้า');
       }
-      
-      // ปิดโหมดแก้ไข
+
       const updatedProducts = [...products];
       updatedProducts[index].isEditing = false;
       setProducts(updatedProducts);
       
       setSuccess('บันทึกการแก้ไขสินค้าสำเร็จ');
-      
-      // ลบข้อความสำเร็จหลัง 3 วินาที
+
       setTimeout(() => {
         setSuccess('');
-      }, 3000);
+      }, 2000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึกการแก้ไข');
     } finally {
       setSubmitting(false);
     }
   };
-  
-  // เพิ่มสินค้าใหม่ในกลุ่ม
+
   const addNewProductToGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
     
     try {
-      // ตรวจสอบข้อมูลที่จำเป็น
       if (!newProduct.sku.trim()) {
         throw new Error('กรุณาระบุ SKU ของสินค้า');
       }
@@ -543,8 +481,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (newProduct.price_origin <= 0) {
         throw new Error('กรุณาระบุราคาขายที่มากกว่า 0');
       }
-      
-      // เพิ่ม group_id เข้าไปในข้อมูล
+
       const productWithGroup = {
         ...newProduct,
         group_id: parseInt(groupId)
@@ -563,8 +500,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
       }
-      
-      // อัปเดตรายการสินค้าในหน้าจอ
+
       const newProductData: EditableProductData = {
         id: data.data.id,
         sku: data.data.sku,
@@ -577,15 +513,14 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_heigth: data.data.product_heigth,
         product_weight: data.data.product_weight,
         img_url: data.data.img_url,
-        categories: Array.isArray(newProduct.categories) ? newProduct.categories : [],
-        collections: Array.isArray(newProduct.collections) ? newProduct.collections : [],
+        categories: groupCategories,
+        collections: groupCollections,
         isEditing: false,
         isDeleting: false
       };
       
       setProducts([...products, newProductData]);
-      
-      // รีเซ็ตฟอร์มเพิ่มสินค้า
+
       setNewProduct({
         sku: '',
         name_sku: '',
@@ -603,19 +538,17 @@ export default function EditGroupForm({ id }: { id: string }) {
       
       setShowAddProductForm(false);
       setSuccess('เพิ่มสินค้าสำเร็จ');
-      
-      // ลบข้อความสำเร็จหลัง 3 วินาที
+
       setTimeout(() => {
         setSuccess('');
-      }, 3000);
+      }, 2000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
     } finally {
       setSubmitting(false);
     }
   };
-  
-  // ลบสินค้า
+
   const confirmDeleteProduct = async (index: number) => {
     setSubmitting(true);
     setError('');
@@ -632,26 +565,23 @@ export default function EditGroupForm({ id }: { id: string }) {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการลบสินค้า');
       }
-      
-      // ลบสินค้าออกจากรายการ
+
       const updatedProducts = [...products];
       updatedProducts.splice(index, 1);
       setProducts(updatedProducts);
       
       setSuccess('ลบสินค้าสำเร็จ');
-      
-      // ลบข้อความสำเร็จหลัง 3 วินาที
+
       setTimeout(() => {
         setSuccess('');
-      }, 3000);
+      }, 2000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการลบสินค้า');
     } finally {
       setSubmitting(false);
     }
   };
-  
-  // ลบกลุ่มสินค้าและสินค้าทั้งหมด
+
   const deleteEntireGroup = async () => {
     setSubmitting(true);
     setError('');
@@ -668,8 +598,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       }
       
       setSuccess('ลบกลุ่มสินค้าและสินค้าทั้งหมดสำเร็จ');
-      
-      // รอสักครู่แล้วกลับไปหน้ารายการสินค้า
+
       setTimeout(() => {
         router.push('/products/list');
       }, 1500);
@@ -680,8 +609,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       setShowDeleteGroupDialog(false);
     }
   };
-  
-  // ฟังก์ชันแปลงวันที่ให้อยู่ในรูปแบบไทย
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('th-TH', {

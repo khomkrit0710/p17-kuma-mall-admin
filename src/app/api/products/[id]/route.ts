@@ -10,7 +10,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -20,8 +19,7 @@ export async function GET(
     }
 
     const productId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(productId)) {
       return NextResponse.json(
         { error: "รหัสสินค้าไม่ถูกต้อง" },
@@ -29,38 +27,33 @@ export async function GET(
       );
     }
 
-    // ดึงข้อมูลสินค้าพร้อมความสัมพันธ์ทั้งหมด
     const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
-        product_categories: {
-          include: {
-            category: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        product_collections: {
-          include: {
-            collection: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
         product_group: {
           include: {
             group: {
-              select: {
-                id: true,
-                group_name: true,
-                description: true,
-                main_img_url: true,
+              include: {
+                group_categories: {
+                  include: {
+                    category: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
+                group_collections: {
+                  include: {
+                    collection: {
+                      select: {
+                        id: true,
+                        name: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -76,7 +69,6 @@ export async function GET(
       );
     }
 
-    // แปลงข้อมูลให้อยู่ในรูปแบบที่เหมาะสม
     const formattedProduct = {
       id: product.id,
       uuid: product.uuid,
@@ -93,20 +85,25 @@ export async function GET(
       group_name: product.group_name,
       create_Date: product.create_Date,
       update_date: product.update_date,
-      categories: product.product_categories.map((pc) => ({
-        id: pc.category.id,
-        name: pc.category.name,
-      })),
-      collections: product.product_collections.map((pc) => ({
-        id: pc.collection.id,
-        name: pc.collection.name,
-      })),
+      categories: product.product_group.length > 0
+        ? product.product_group[0].group.group_categories.map((gc) => ({
+            id: gc.category.id,
+            name: gc.category.name,
+          }))
+        : [],
+      collections: product.product_group.length > 0
+        ? product.product_group[0].group.group_collections.map((gc) => ({
+            id: gc.collection.id,
+            name: gc.collection.name,
+          }))
+        : [],
       groups: product.product_group.map((pg) => ({
         id: pg.group.id,
         name: pg.group.group_name,
         description: pg.group.description,
         images: pg.group.main_img_url,
       })),
+      
       flash_sale: product.flash_sale,
     };
 
@@ -120,13 +117,11 @@ export async function GET(
   }
 }
 
-// ฟังก์ชันสำหรับอัปเดตข้อมูลสินค้า
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -137,7 +132,6 @@ export async function PUT(
 
     const productId = parseInt((await params).id);
     
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(productId)) {
       return NextResponse.json(
         { error: "รหัสสินค้าไม่ถูกต้อง" },
@@ -145,7 +139,6 @@ export async function PUT(
       );
     }
 
-    // ตรวจสอบว่ามีสินค้านี้อยู่จริงหรือไม่
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
       include: {
@@ -171,12 +164,9 @@ export async function PUT(
       product_weight = null,  
       img_url = null,
       group_name,
-      categories = [],
-      collections = [],
-      group_id = null  // อาจมีการเปลี่ยนกลุ่ม
+      group_id = null 
     } = await request.json();
 
-    // ตรวจสอบว่ามีการส่งค่าที่จำเป็นมาหรือไม่
     if (price_origin === undefined) {
       return NextResponse.json({ 
         success: false, 
@@ -184,7 +174,6 @@ export async function PUT(
       }, { status: 400 });
     }
 
-    // ตรวจสอบกลุ่มสินค้า (ถ้ามีการระบุ)
     let updatedGroupName = group_name || existingProduct.group_name;
     let shouldUpdateGroup = false;
     
@@ -199,18 +188,13 @@ export async function PUT(
           error: "ไม่พบกลุ่มสินค้าที่ระบุ" 
         }, { status: 404 });
       }
-      
-      // ตรวจสอบว่ากลุ่มเปลี่ยนไปหรือไม่
+
       const currentGroupId = existingProduct.product_group[0]?.group_id;
       shouldUpdateGroup = currentGroupId !== group_id;
-      
-      // ใช้ชื่อกลุ่มจริงเพื่อแสดงผล
       updatedGroupName = existingGroup.group_name;
     }
 
-    // อัปเดตข้อมูลสินค้าด้วย Transaction
     const result = await prisma.$transaction(async (tx) => {
-      // 1. อัปเดตข้อมูลสินค้า
       const updatedProduct = await tx.product.update({
         where: { id: productId },
         data: {
@@ -227,60 +211,16 @@ export async function PUT(
         }
       });
 
-      // 2. อัปเดตความสัมพันธ์กับกลุ่ม (ถ้ามีการเปลี่ยนแปลง)
       if (shouldUpdateGroup && group_id) {
-        // ลบความสัมพันธ์เดิม
         await tx.product_to_group.deleteMany({
           where: { product_id: productId }
         });
-        
-        // สร้างความสัมพันธ์ใหม่
         await tx.product_to_group.create({
           data: {
             product_id: productId,
             group_id: group_id
           }
         });
-      }
-
-      // 3. ลบความสัมพันธ์กับหมวดหมู่เดิมแล้วสร้างใหม่
-      if (categories.length >= 0) {
-        // ลบความสัมพันธ์เดิม
-        await tx.product_to_category.deleteMany({
-          where: { product_id: productId }
-        });
-
-        // สร้างความสัมพันธ์ใหม่
-        if (categories.length > 0) {
-          const categoryConnections = categories.map((categoryId: string) => ({
-            product_id: productId,
-            category_id: parseInt(categoryId)
-          }));
-
-          await tx.product_to_category.createMany({
-            data: categoryConnections
-          });
-        }
-      }
-
-      // 4. ลบความสัมพันธ์กับคอลเลคชันเดิมแล้วสร้างใหม่
-      if (collections.length >= 0) {
-        // ลบความสัมพันธ์เดิม
-        await tx.product_to_collection.deleteMany({
-          where: { product_id: productId }
-        });
-
-        // สร้างความสัมพันธ์ใหม่
-        if (collections.length > 0) {
-          const collectionConnections = collections.map((collectionId: string) => ({
-            product_id: productId,
-            collection_id: parseInt(collectionId)
-          }));
-
-          await tx.product_to_collection.createMany({
-            data: collectionConnections
-          });
-        }
       }
 
       return updatedProduct;
@@ -300,13 +240,11 @@ export async function PUT(
   }
 }
 
-// ฟังก์ชันสำหรับลบสินค้า
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -316,16 +254,12 @@ export async function DELETE(
     }
 
     const productId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(productId)) {
       return NextResponse.json(
         { error: "รหัสสินค้าไม่ถูกต้อง" },
         { status: 400 }
       );
     }
-
-    // ตรวจสอบว่ามีสินค้านี้อยู่จริงหรือไม่
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId }
     });
@@ -336,8 +270,7 @@ export async function DELETE(
         { status: 404 }
       );
     }
-
-    // ลบสินค้า (ใน Schema มีการกำหนด onDelete: Cascade ทำให้ความสัมพันธ์ถูกลบอัตโนมัติ)
+    
     await prisma.product.delete({
       where: { id: productId }
     });

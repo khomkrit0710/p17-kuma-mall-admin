@@ -7,11 +7,6 @@ import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
 import TagMultiSelect from '@/component/TagMultiSelect';
 
-type GroupProductFormData = {
-  group_name: string;
-  description: string;
-  main_img_url: string[];
-};
 
 type ProductFormData = {
   sku: string;
@@ -153,47 +148,6 @@ export default function AddProductPage() {
     setProductsList(updatedProducts);
   };
   
-  // จัดการการเลือกหมวดหมู่
-  const handleCategoryChange = (productIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const categoryId = e.target.value;
-    const isChecked = e.target.checked;
-    
-    const updatedProducts = [...productsList];
-    
-    if (isChecked) {
-      updatedProducts[productIndex].categories = [
-        ...updatedProducts[productIndex].categories,
-        categoryId
-      ];
-    } else {
-      updatedProducts[productIndex].categories = 
-        updatedProducts[productIndex].categories.filter(id => id !== categoryId);
-    }
-    
-    setProductsList(updatedProducts);
-  };
-  
-  // จัดการการเลือกคอลเลคชัน
-  const handleCollectionChange = (productIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    const collectionId = e.target.value;
-    const isChecked = e.target.checked;
-    
-    const updatedProducts = [...productsList];
-    
-    if (isChecked) {
-      updatedProducts[productIndex].collections = [
-        ...updatedProducts[productIndex].collections,
-        collectionId
-      ];
-    } else {
-      updatedProducts[productIndex].collections = 
-        updatedProducts[productIndex].collections.filter(id => id !== collectionId);
-    }
-    
-    setProductsList(updatedProducts);
-  };
-  
-  // เพิ่มสินค้าใหม่ในรายการ
   const addNewProduct = () => {
     setProductsList([
       ...productsList,

@@ -5,13 +5,11 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-// ดึงข้อมูลหมวดหมู่ตาม ID
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -21,8 +19,7 @@ export async function GET(
     }
 
     const categoryId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { error: "รหัสหมวดหมู่ไม่ถูกต้อง" },
@@ -30,7 +27,6 @@ export async function GET(
       );
     }
 
-    // ดึงข้อมูลหมวดหมู่
     const category = await prisma.category.findUnique({
       where: { id: categoryId }
     });
@@ -52,13 +48,11 @@ export async function GET(
   }
 }
 
-// อัปเดตข้อมูลหมวดหมู่
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -68,8 +62,7 @@ export async function PUT(
     }
 
     const categoryId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { error: "รหัสหมวดหมู่ไม่ถูกต้อง" },
@@ -77,7 +70,6 @@ export async function PUT(
       );
     }
 
-    // ตรวจสอบว่ามีหมวดหมู่นี้อยู่จริงหรือไม่
     const existingCategory = await prisma.category.findUnique({
       where: { id: categoryId }
     });
@@ -98,7 +90,6 @@ export async function PUT(
       );
     }
 
-    // ตรวจสอบว่ามีหมวดหมู่ชื่อซ้ำหรือไม่
     const duplicateName = await prisma.category.findFirst({
       where: {
         name,
@@ -113,7 +104,6 @@ export async function PUT(
       );
     }
 
-    // อัปเดตข้อมูลหมวดหมู่
     const updatedCategory = await prisma.category.update({
       where: { id: categoryId },
       data: {
@@ -136,13 +126,11 @@ export async function PUT(
   }
 }
 
-// ลบหมวดหมู่
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -153,7 +141,6 @@ export async function DELETE(
 
     const categoryId = parseInt((await params).id);
     
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
     if (isNaN(categoryId)) {
       return NextResponse.json(
         { error: "รหัสหมวดหมู่ไม่ถูกต้อง" },
@@ -161,7 +148,6 @@ export async function DELETE(
       );
     }
 
-    // ตรวจสอบว่ามีหมวดหมู่นี้อยู่จริงหรือไม่
     const existingCategory = await prisma.category.findUnique({
       where: { id: categoryId }
     });
@@ -173,7 +159,6 @@ export async function DELETE(
       );
     }
 
-    // ลบหมวดหมู่
     await prisma.category.delete({
       where: { id: categoryId }
     });
@@ -184,8 +169,7 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Error deleting category:", error);
-    
-    // ตรวจสอบว่าเป็นข้อผิดพลาดจากการมีความสัมพันธ์กับสินค้าหรือไม่
+
     if (error instanceof Error && error.message.includes('Foreign key constraint failed')) {
       return NextResponse.json(
         { error: "ไม่สามารถลบหมวดหมู่นี้ได้ เนื่องจากมีสินค้าที่เกี่ยวข้อง กรุณาลบความสัมพันธ์ก่อน" },

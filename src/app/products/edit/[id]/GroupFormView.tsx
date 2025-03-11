@@ -262,7 +262,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 placeholder="เลือกหมวดหมู่..."
               />
               <p className="text-sm text-gray-500 mt-1">
-                หมวดหมู่ที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าใหม่ที่เพิ่มในกลุ่มนี้
+                หมวดหมู่ที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าทั้งหมดในกลุ่มนี้
               </p>
             </div>
             
@@ -277,7 +277,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 placeholder="เลือกคอลเลคชัน..."
               />
               <p className="text-sm text-gray-500 mt-1">
-                คอลเลคชันที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าใหม่ที่เพิ่มในกลุ่มนี้
+                คอลเลคชันที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าทั้งหมดในกลุ่มนี้
               </p>
             </div>
           </div>
@@ -495,7 +495,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                   </div>
                 </div>
                 
-                {/* ข้อมูลขนาดและหมวดหมู่ */}
+                {/* ข้อมูลขนาดและข้อมูลเพิ่มเติม */}
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="new_product_width" className="block text-sm font-medium text-gray-700 mb-1">
@@ -556,6 +556,42 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       min="0"
                     />
                   </div>
+                  
+                  {/* แสดงข้อความแจ้งเตือนว่าสินค้าใหม่จะใช้หมวดหมู่และคอลเลคชันจากกลุ่ม */}
+                  <div className="p-4 bg-blue-50 border border-blue-100 text-blue-700 rounded mt-4">
+                    <p className="font-medium mb-2">หมายเหตุ:</p>
+                    <p className="text-sm">สินค้าใหม่จะใช้หมวดหมู่และคอลเลคชันจากกลุ่มสินค้านี้โดยอัตโนมัติ</p>
+                    {groupData.categories && groupData.categories.length > 0 && (
+                      <div className="mt-2">
+                        <span className="text-sm font-medium">หมวดหมู่:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {groupData.categories.map(category => (
+                            <span 
+                              key={category.id} 
+                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                            >
+                              {category.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {groupData.collections && groupData.collections.length > 0 && (
+                      <div className="mt-2">
+                        <span className="text-sm font-medium">คอลเลคชัน:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {groupData.collections.map(collection => (
+                            <span 
+                              key={collection.id} 
+                              className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full"
+                            >
+                              {collection.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -579,389 +615,394 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
           </div>
         )}
         
-        {/* รายการสินค้า */}
-        {Array.isArray(products) && products.length > 0 ? (
-          <div className="space-y-4">
-            {products.map((product, index) => (
-              <div key={product.id} className="border rounded overflow-hidden">
-                {/* ส่วนหัวสินค้า */}
-                <div className="bg-gray-50 p-3 flex justify-between items-center">
-                  <div className="font-medium">{product.name_sku} <span className="text-gray-500 text-sm">({product.sku})</span></div>
-                  <div className="flex space-x-2">
-                    {product.isEditing ? (
-                      <>
-                        <button
-                          onClick={() => toggleEditProduct(index)}
-                          className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-sm hover:bg-gray-400 transition-colors"
-                        >
-                          ยกเลิก
-                        </button>
-                        <button
-                          onClick={() => saveProductEdit(index)}
-                          className="bg-blue-600 text-white px-2 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
-                          disabled={submitting}
-                        >
-                          {submitting ? 'กำลังบันทึก...' : 'บันทึก'}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => toggleEditProduct(index)}
-                          className="bg-blue-600 text-white px-2 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
-                        >
-                          แก้ไข
-                        </button>
-                        <button
-                          onClick={() => toggleDeleteProduct(index)}
-                          className="bg-red-600 text-white px-2 py-1 rounded text-sm hover:bg-red-700 transition-colors"
-                        >
-                          ลบ
-                        </button>
-                      </>
-                      )}
-                      </div>
+      {/* รายการสินค้า */}
+      {Array.isArray(products) && products.length > 0 ? (
+        <div className="space-y-4">
+          {products.map((product, index) => (
+            <div key={product.id} className="border rounded overflow-hidden">
+              {/* ส่วนหัวสินค้า */}
+              <div className="bg-gray-50 p-3 flex justify-between items-center">
+                <div className="font-medium">{product.name_sku} <span className="text-gray-500 text-sm">({product.sku})</span></div>
+                <div className="flex space-x-2">
+                  {product.isEditing ? (
+                    <>
+                      <button
+                        onClick={() => toggleEditProduct(index)}
+                        className="bg-gray-300 text-gray-700 px-2 py-1 rounded text-sm hover:bg-gray-400 transition-colors"
+                      >
+                        ยกเลิก
+                      </button>
+                      <button
+                        onClick={() => saveProductEdit(index)}
+                        className="bg-blue-600 text-white px-2 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
+                        disabled={submitting}
+                      >
+                        {submitting ? 'กำลังบันทึก...' : 'บันทึก'}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => toggleEditProduct(index)}
+                        className="bg-blue-600 text-white px-2 py-1 rounded text-sm hover:bg-blue-700 transition-colors"
+                      >
+                        แก้ไข
+                      </button>
+                      <button
+                        onClick={() => toggleDeleteProduct(index)}
+                        className="bg-red-600 text-white px-2 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+                      >
+                        ลบ
+                      </button>
+                    </>
+                    )}
                     </div>
-                    
-                    {/* ส่วนเนื้อหาสินค้า */}
-                    {product.isEditing ? (
-                      <div className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* ข้อมูลพื้นฐาน */}
-                          <div className="space-y-4">
-                            <div>
-                              <label htmlFor={`name_sku-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                ชื่อสินค้า <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                id={`name_sku-${index}`}
-                                name="name_sku"
-                                value={product.name_sku}
-                                onChange={(e) => handleProductChange(index, e)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                required
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor={`quantity-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                จำนวนในคลัง <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="number"
-                                id={`quantity-${index}`}
-                                name="quantity"
-                                value={product.quantity}
-                                onChange={(e) => handleProductChange(index, e)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                min="0"
-                                required
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor={`make_price-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                ต้นทุน
-                              </label>
-                              <input
-                                type="number"
-                                id={`make_price-${index}`}
-                                name="make_price"
-                                value={product.make_price === null ? '' : product.make_price}
-                                onChange={(e) => handleProductChange(index, e)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                min="0"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor={`price_origin-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                ราคาขาย <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                type="number"
-                                id={`price_origin-${index}`}
-                                name="price_origin"
-                                value={product.price_origin}
-                                onChange={(e) => handleProductChange(index, e)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                min="0"
-                                required
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor={`image-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                รูปภาพสินค้า
-                              </label>
-                              <input
-                                type="file"
-                                id={`image-${index}`}
-                                onChange={(e) => handleProductImageUpload(index, e)}
-                                accept="image/*"
-                                className="block w-full text-sm text-gray-500 
-                                  file:mr-4 file:py-2 file:px-4 
-                                  file:rounded file:border-0 
-                                  file:text-sm file:font-semibold 
-                                  file:bg-blue-50 file:text-blue-700 
-                                  hover:file:bg-blue-100"
-                                disabled={uploading}
-                              />
-                              
-                              {product.img_url && (
-                                <div className="mt-2">
-                                  <Image 
-                                    src={product.img_url} 
-                                    alt={product.name_sku} 
-                                    width={96}
-                                    height={96}
-                                    className="object-cover border rounded" 
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          {/* ข้อมูลขนาดและหมวดหมู่ */}
-                          <div className="space-y-4">
-                            <div>
-                              <label htmlFor={`product_width-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                ความกว้าง (ซม.)
-                              </label>
-                              <input
-                                type="number"
-                                id={`product_width-${index}`}
-                                name="product_width"
-                                value={product.product_width === null ? '' : product.product_width}
-                                onChange={(e) => handleProductChange(index, e)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                min="0"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor={`product_length-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                ความยาว (ซม.)
-                              </label>
-                              <input
-                                type="number"
-                                id={`product_length-${index}`}
-                                name="product_length"
-                                value={product.product_length === null ? '' : product.product_length}
-                                onChange={(e) => handleProductChange(index, e)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                min="0"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor={`product_heigth-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                ความสูง (ซม.)
-                              </label>
-                              <input
-                                type="number"
-                                id={`product_heigth-${index}`}
-                                name="product_heigth"
-                                value={product.product_heigth === null ? '' : product.product_heigth}
-                                onChange={(e) => handleProductChange(index, e)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                min="0"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label htmlFor={`product_weight-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                                น้ำหนัก (กรัม)
-                              </label>
-                              <input
-                                type="number"
-                                id={`product_weight-${index}`}
-                                name="product_weight"
-                                value={product.product_weight === null ? '' : product.product_weight}
-                                onChange={(e) => handleProductChange(index, e)}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                min="0"
-                              />
-                            </div>
-                            
-                          {/* หมวดหมู่ */}
+                  </div>
+                  
+                  {/* ส่วนเนื้อหาสินค้า */}
+                  {product.isEditing ? (
+                    <div className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* ข้อมูลพื้นฐาน */}
+                        <div className="space-y-4">
                           <div>
-                            <TagMultiSelect
-                              id={`categories-${index}`}
-                              label="หมวดหมู่"
-                              options={categories}
-                              selectedValues={Array.isArray(product.categories) ? product.categories : []}
-                              onChange={(selectedValues) => {
-                                const updatedProducts = [...products];
-                                updatedProducts[index].categories = selectedValues;
-                                handleProductChange(index, {
-                                    target: {
-                                        name: 'categories',
-                                        value: selectedValues
-                                    }
-                                } as unknown as React.ChangeEvent<HTMLInputElement>);
-                              }}
-                              placeholder="เลือกหมวดหมู่..."
+                            <label htmlFor={`name_sku-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              ชื่อสินค้า <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              id={`name_sku-${index}`}
+                              name="name_sku"
+                              value={product.name_sku}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              required
                             />
                           </div>
-                            
-                            {/* คอลเลคชัน */}
-                            <div>
-                              <TagMultiSelect
-                                id={`collections-${index}`}
-                                label="คอลเลคชัน"
-                                options={collections}
-                                selectedValues={Array.isArray(product.collections) ? product.collections : []}
-                                onChange={(selectedValues) => {
-                                  const updatedProducts = [...products];
-                                  updatedProducts[index].collections = selectedValues;
-                                  handleProductChange(index, {
-                                      target: {
-                                          name: 'collections',
-                                          value: selectedValues
-                                      }
-                                  } as unknown as React.ChangeEvent<HTMLInputElement>);
-                                }}
-                                placeholder="เลือกคอลเลคชัน..."
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : product.isDeleting ? (
-                      <div className="p-4 bg-red-50">
-                        <div className="text-center">
-                          <p className="text-red-700 mb-4">คุณแน่ใจหรือไม่ที่จะลบสินค้านี้? การกระทำนี้ไม่สามารถเรียกคืนได้</p>
-                          <div className="flex justify-center space-x-4">
-                            <button
-                              onClick={() => toggleDeleteProduct(index)}
-                              className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
-                            >
-                              ยกเลิก
-                            </button>
-                            <button
-                              onClick={() => confirmDeleteProduct(index)}
-                              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
-                              disabled={submitting}
-                            >
-                              {submitting ? 'กำลังลบ...' : 'ยืนยันการลบ'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div className="md:col-span-2">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <span className="text-sm text-gray-500">ราคาขาย:</span>
-                                <div className="font-medium">{product.price_origin.toLocaleString('th-TH')} บาท</div>
-                              </div>
-                              <div>
-                                <span className="text-sm text-gray-500">จำนวนในคลัง:</span>
-                                <div className={product.quantity > 0 ? 'text-green-600' : 'text-red-600'}>
-                                  {product.quantity} ชิ้น
-                                </div>
-                              </div>
-                              {product.make_price !== null && (
-                                <div>
-                                  <span className="text-sm text-gray-500">ต้นทุน:</span>
-                                  <div>{product.make_price.toLocaleString('th-TH')} บาท</div>
-                                </div>
-                              )}
-                              {Array.isArray(product.categories) && product.categories.length > 0 && (
-                                <div>
-                                  <span className="text-sm text-gray-500">หมวดหมู่:</span>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {categories
-                                      .filter(cat => product.categories.includes(String(cat.id)))
-                                      .map(cat => (
-                                        <span key={cat.id} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                          {cat.name}
-                                        </span>
-                                      ))
-                                    }
-                                  </div>
-                                </div>
-                              )}
-                              {Array.isArray(product.collections) && product.collections.length > 0 && (
-                                <div>
-                                  <span className="text-sm text-gray-500">คอลเลคชัน:</span>
-                                  <div className="flex flex-wrap gap-1 mt-1">
-                                    {collections
-                                      .filter(col => product.collections.includes(String(col.id)))
-                                      .map(col => (
-                                        <span key={col.id} className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
-                                          {col.name}
-                                        </span>
-                                      ))
-                                    }
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                          
                           <div>
-                            {product.img_url ? (
-                              <div>
+                            <label htmlFor={`quantity-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              จำนวนในคลัง <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              id={`quantity-${index}`}
+                              name="quantity"
+                              value={product.quantity}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              min="0"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <label htmlFor={`make_price-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              ต้นทุน
+                            </label>
+                            <input
+                              type="number"
+                              id={`make_price-${index}`}
+                              name="make_price"
+                              value={product.make_price === null ? '' : product.make_price}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              min="0"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label htmlFor={`price_origin-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              ราคาขาย <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              id={`price_origin-${index}`}
+                              name="price_origin"
+                              value={product.price_origin}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              min="0"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <label htmlFor={`image-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              รูปภาพสินค้า
+                            </label>
+                            <input
+                              type="file"
+                              id={`image-${index}`}
+                              onChange={(e) => handleProductImageUpload(index, e)}
+                              accept="image/*"
+                              className="block w-full text-sm text-gray-500 
+                                file:mr-4 file:py-2 file:px-4 
+                                file:rounded file:border-0 
+                                file:text-sm file:font-semibold 
+                                file:bg-blue-50 file:text-blue-700 
+                                hover:file:bg-blue-100"
+                              disabled={uploading}
+                            />
+                            
+                            {product.img_url && (
+                              <div className="mt-2">
                                 <Image 
                                   src={product.img_url} 
                                   alt={product.name_sku} 
-                                  width={200}
-                                  height={200}
-                                  className="object-contain border rounded" 
+                                  width={96}
+                                  height={96}
+                                  className="object-cover border rounded" 
                                 />
-                              </div>
-                            ) : (
-                              <div className="w-full h-32 bg-gray-100 flex items-center justify-center border rounded">
-                                <span className="text-gray-400">ไม่มีรูปภาพ</span>
                               </div>
                             )}
                           </div>
                         </div>
+                        
+                        {/* ข้อมูลขนาดและหมวดหมู่ */}
+                        <div className="space-y-4">
+                          <div>
+                            <label htmlFor={`product_width-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              ความกว้าง (ซม.)
+                            </label>
+                            <input
+                              type="number"
+                              id={`product_width-${index}`}
+                              name="product_width"
+                              value={product.product_width === null ? '' : product.product_width}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              min="0"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label htmlFor={`product_length-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              ความยาว (ซม.)
+                            </label>
+                            <input
+                              type="number"
+                              id={`product_length-${index}`}
+                              name="product_length"
+                              value={product.product_length === null ? '' : product.product_length}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              min="0"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label htmlFor={`product_heigth-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              ความสูง (ซม.)
+                            </label>
+                            <input
+                              type="number"
+                              id={`product_heigth-${index}`}
+                              name="product_heigth"
+                              value={product.product_heigth === null ? '' : product.product_heigth}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              min="0"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label htmlFor={`product_weight-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              น้ำหนัก (กรัม)
+                            </label>
+                            <input
+                              type="number"
+                              id={`product_weight-${index}`}
+                              name="product_weight"
+                              value={product.product_weight === null ? '' : product.product_weight}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              min="0"
+                            />
+                          </div>
+                          
+                          {/* แสดงข้อความว่าหมวดหมู่และคอลเลคชันจะใช้จากกลุ่ม */}
+                          <div className="p-4 bg-blue-50 border border-blue-100 text-blue-700 rounded mt-4">
+                            <p className="text-sm">สินค้านี้ใช้หมวดหมู่และคอลเลคชันจากกลุ่มสินค้าโดยอัตโนมัติ</p>
+                          </div>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-gray-500">
-                ยังไม่มีสินค้าในกลุ่มนี้ คลิกที่ปุ่ม เพิ่มสินค้าใหม่ เพื่อเพิ่มสินค้า
-              </div>
-            )}
-          </div>
-          
-          {/* กล่องยืนยันการลบกลุ่ม */}
-          {showDeleteGroupDialog && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full">
-                <h3 className="text-lg font-medium mb-4">ยืนยันการลบกลุ่มสินค้า</h3>
-                <p className="mb-6 text-gray-600">
-                  คุณกำลังจะลบกลุ่มสินค้า <strong>{groupData.group_name}</strong> และสินค้าทั้งหมด {Array.isArray(products) ? products.length : 0} รายการในกลุ่มนี้ 
-                  การกระทำนี้ไม่สามารถเรียกคืนได้ คุณแน่ใจหรือไม่?
-                </p>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowDeleteGroupDialog(false)}
-                    className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
-                  >
-                    ยกเลิก
-                  </button>
-                  <button
-                    onClick={deleteEntireGroup}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                    disabled={submitting}
-                  >
-                    {submitting ? 'กำลังลบ...' : 'ยืนยันการลบ'}
-                  </button>
+                    </div>
+                  ) : product.isDeleting ? (
+                    <div className="p-4 bg-red-50">
+                      <div className="text-center">
+                        <p className="text-red-700 mb-4">คุณแน่ใจหรือไม่ที่จะลบสินค้านี้? การกระทำนี้ไม่สามารถเรียกคืนได้</p>
+                        <div className="flex justify-center space-x-4">
+                          <button
+                            onClick={() => toggleDeleteProduct(index)}
+                            className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+                          >
+                            ยกเลิก
+                          </button>
+                          <button
+                            onClick={() => confirmDeleteProduct(index)}
+                            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+                            disabled={submitting}
+                          >
+                            {submitting ? 'กำลังลบ...' : 'ยืนยันการลบ'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          {/* แถวซ้าย */}
+                          <div className="space-y-4">
+                            <div>
+                              <span className="text-sm text-gray-500">ชื่อสินค้า:</span>
+                              <div className="font-medium">{product.name_sku}</div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-gray-500">จำนวนในคลัง:</span>
+                              <div className={product.quantity > 0 ? 'text-green-600' : 'text-red-600'}>
+                                {product.quantity} ชิ้น
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-gray-500">ต้นทุน:</span>
+                              <div>{product.make_price !== null ? `${product.make_price.toLocaleString('th-TH')} บาท` : '-'}</div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-gray-500">ราคาขาย:</span>
+                              <div className="font-medium">{product.price_origin.toLocaleString('th-TH')} บาท</div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-gray-500">หมวดหมู่:</span>
+                              <div>
+                                {groupCategories.length > 0 ? (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {categories
+                                      .filter(cat => groupCategories.includes(String(cat.id)))
+                                      .map(cat => (
+                                        <span key={cat.id} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                          {cat.name}
+                                        </span>
+                                      ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          {/* แถวขวา */}
+                          <div className="space-y-4">
+                            <div>
+                              <span className="text-sm text-gray-500">ความกว้าง (ซม.):</span>
+                              <div>{product.product_width !== null ? product.product_width : '-'}</div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-gray-500">ความยาว (ซม.):</span>
+                              <div>{product.product_length !== null ? product.product_length : '-'}</div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-gray-500">ความสูง (ซม.):</span>
+                              <div>{product.product_heigth !== null ? product.product_heigth : '-'}</div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-gray-500">น้ำหนัก (กรัม):</span>
+                              <div>{product.product_weight !== null ? product.product_weight : '-'}</div>
+                            </div>
+                            
+                            <div>
+                              <span className="text-sm text-gray-500">คอลเลคชัน:</span>
+                              <div>
+                                {groupCollections.length > 0 ? (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {collections
+                                      .filter(col => groupCollections.includes(String(col.id)))
+                                      .map(col => (
+                                        <span key={col.id} className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                          {col.name}
+                                        </span>
+                                      ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* รูปภาพสินค้า */}
+                      <div className="mt-6">
+                        <span className="text-sm text-gray-500">รูปภาพสินค้า:</span>
+                        <div className="mt-2">
+                          {product.img_url ? (
+                            <Image 
+                              src={product.img_url} 
+                              alt={product.name_sku} 
+                              width={200}
+                              height={200}
+                              className="object-contain border rounded" 
+                            />
+                          ) : (
+                            <div className="w-48 h-48 bg-gray-100 flex items-center justify-center border rounded">
+                              <span className="text-gray-400">ไม่มีรูปภาพ</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              ยังไม่มีสินค้าในกลุ่มนี้ คลิกที่ปุ่ม เพิ่มสินค้าใหม่ เพื่อเพิ่มสินค้า
             </div>
           )}
         </div>
+        
+        {/* กล่องยืนยันการลบกลุ่ม */}
+        {showDeleteGroupDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h3 className="text-lg font-medium mb-4">ยืนยันการลบกลุ่มสินค้า</h3>
+              <p className="mb-6 text-gray-600">
+                คุณกำลังจะลบกลุ่มสินค้า <strong>{groupData.group_name}</strong> และสินค้าทั้งหมด {Array.isArray(products) ? products.length : 0} รายการในกลุ่มนี้ 
+                การกระทำนี้ไม่สามารถเรียกคืนได้ คุณแน่ใจหรือไม่?
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteGroupDialog(false)}
+                  className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={deleteEntireGroup}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                  disabled={submitting}
+                >
+                  {submitting ? 'กำลังลบ...' : 'ยืนยันการลบ'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       );
-    };
-    
+}
+
 export default GroupFormView;

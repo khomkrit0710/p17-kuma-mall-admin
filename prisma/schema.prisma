@@ -22,43 +22,39 @@ datasource db {
 // schema.prisma
 
 model product {
-  id              Int         @id @default(autoincrement())
-  uuid            String      @default(uuid())
-  create_Date     DateTime    @default(now())
-  sku             String      @unique
-  name_sku        String      @default("")
-  quantity        Int         @default(0)
-  make_price      Int?        
-  price_origin    Int         
-  product_width   Int?        
-  product_length  Int?        
-  product_heigth  Int?
-  product_weight  Int?
-  img_url         String?
-  update_date     DateTime    @updatedAt
-  
-  // Relations
-  flash_sale            flash_sale?  
-  product_group         product_to_group[] 
-  product_categories    product_to_category[]
-  product_collections   product_to_collection[]
-  group_name            String      @db.Text @default("") // เก็บไว้สำหรับการแสดงผลเท่านั้น
+  id                  Int               @id @default(autoincrement())
+  uuid                String            @default(uuid())
+  create_Date         DateTime          @default(now())
+  sku                 String            @unique
+  name_sku            String            @default("")
+  quantity            Int               @default(0)
+  make_price          Int?        
+  price_origin        Int         
+  product_width       Int?        
+  product_length      Int?        
+  product_heigth      Int?
+  product_weight      Int?
+  img_url             String?
+  update_date         DateTime          @updatedAt
+
+  flash_sale          flash_sale?  
+  product_group       product_to_group[] 
+  group_name          String            @db.Text @default("") 
 }
 
 model group_product {
-  id              Int         @id @default(autoincrement())
-  uuid            String      @default(uuid())
-  create_Date     DateTime    @default(now())
-  group_name      String      @db.Text @default("")
-  main_img_url    String[]    @default([]) 
-  description     String      @db.Text @default("")
+  id                  Int               @id @default(autoincrement())
+  uuid                String            @default(uuid())
+  create_Date         DateTime          @default(now())
+  group_name          String            @db.Text @default("")
+  main_img_url        String[]          @default([]) 
+  description         String            @db.Text @default("")
   
-  products        product_to_group[] 
+  products            product_to_group[] 
   group_categories    group_to_category[]
   group_collections   group_to_collection[]
 }
 
-// ตารางหมวดหมู่สินค้า (Category)
 model category {
   id              Int         @id @default(autoincrement())
   uuid            String      @default(uuid())
@@ -66,11 +62,9 @@ model category {
   name            String      @unique
   description     String?     @db.Text
   
-  products        product_to_category[]
   groups          group_to_category[]
 }
 
-// ตารางคอลเลคชัน (Collection)
 model collection {
   id              Int         @id @default(autoincrement())
   uuid            String      @default(uuid())
@@ -78,12 +72,9 @@ model collection {
   name            String      @unique
   description     String?     @db.Text
   
-  // Relations
-  products        product_to_collection[]
-    groups          group_to_collection[]
+  groups          group_to_collection[]
 }
 
-// ตารางเชื่อมระหว่าง product และ group_product (many-to-many)
 model product_to_group {
   product_id      Int
   group_id        Int
@@ -94,32 +85,6 @@ model product_to_group {
   @@id([product_id, group_id])
   @@index([product_id])
   @@index([group_id])
-}
-
-// ตารางเชื่อมระหว่าง product และ category (many-to-many)
-model product_to_category {
-  product_id      Int
-  category_id     Int
-  
-  product         product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  category        category        @relation(fields: [category_id], references: [id])
-  
-  @@id([product_id, category_id])
-  @@index([product_id])
-  @@index([category_id])
-}
-
-// ตารางเชื่อมระหว่าง product และ collection (many-to-many)
-model product_to_collection {
-  product_id      Int
-  collection_id   Int
-  
-  product         product         @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  collection      collection      @relation(fields: [collection_id], references: [id])
-  
-  @@id([product_id, collection_id])
-  @@index([product_id])
-  @@index([collection_id])
 }
 
 model group_to_category {

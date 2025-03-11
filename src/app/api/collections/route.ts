@@ -7,7 +7,6 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -16,7 +15,6 @@ export async function GET() {
       );
     }
 
-    // ดึงข้อมูลคอลเลคชันทั้งหมด
     const collections = await prisma.collection.findMany({
       select: {
         id: true,
@@ -41,8 +39,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -59,7 +57,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // ตรวจสอบว่ามีคอลเลคชันชื่อนี้อยู่แล้วหรือไม่
     const existingCollection = await prisma.collection.findUnique({
       where: { name },
     });
@@ -71,7 +68,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // สร้างคอลเลคชันใหม่
     const newCollection = await prisma.collection.create({
       data: {
         name,

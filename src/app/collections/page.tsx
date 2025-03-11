@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/component/DashboardLayout';
 
-// กำหนดประเภทของข้อมูลคอลเลคชัน
+    //<<-------------------Type------------------->>
 type Collection = {
   id: number;
   uuid: string;
@@ -15,36 +15,28 @@ type Collection = {
 };
 
 export default function CollectionsPage() {
+
+    //<<-------------------State------------------->>
   const router = useRouter();
   const { status } = useSession();
-  
-  // สถานะสำหรับรายการคอลเลคชัน
   const [collections, setCollections] = useState<Collection[]>([]);
   const [totalCollections, setTotalCollections] = useState(0);
-  
-  // สถานะสำหรับการเพิ่ม/แก้ไขคอลเลคชัน
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    id: 0,
-    name: '',
-    description: '',
-  });
-  
-  // สถานะสำหรับการโหลดและข้อผิดพลาด
+  const [formData, setFormData] = useState({id: 0,name: '',description: '',});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
-  // ตรวจสอบการเข้าสู่ระบบ
+
+
+    //<<-------------------useEffect------------------->>
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
-  
-  // โหลดข้อมูลคอลเลคชัน
+
   useEffect(() => {
     if (status !== 'authenticated') return;
     
@@ -70,21 +62,20 @@ export default function CollectionsPage() {
     
     fetchCollections();
   }, [status]);
-  
-  // เปิดฟอร์มเพิ่มคอลเลคชัน
+
+
+    //<<-------------------handle------------------->>
   const handleAddCollection = () => {
     if (totalCollections >= 20) {
       setError('ไม่สามารถเพิ่มคอลเลคชันได้อีก เนื่องจากมีจำนวนคอลเลคชันสูงสุดแล้ว (20 รายการ)');
       return;
     }
-    
     setFormData({ id: 0, name: '', description: '' });
     setIsEditing(false);
     setShowForm(true);
     setError(null);
   };
   
-  // เปิดฟอร์มแก้ไขคอลเลคชัน
   const handleEditCollection = (collection: Collection) => {
     setFormData({ 
       id: collection.id, 
@@ -95,8 +86,7 @@ export default function CollectionsPage() {
     setShowForm(true);
     setError(null);
   };
-  
-  // จัดการการเปลี่ยนแปลงข้อมูลในฟอร์ม
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -104,8 +94,7 @@ export default function CollectionsPage() {
       [name]: value
     });
   };
-  
-  // บันทึกคอลเลคชัน
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -121,7 +110,6 @@ export default function CollectionsPage() {
       let response;
       
       if (isEditing) {
-        // แก้ไขคอลเลคชัน
         response = await fetch(`/api/collections/${formData.id}`, {
           method: 'PUT',
           headers: {
@@ -133,7 +121,6 @@ export default function CollectionsPage() {
           }),
         });
       } else {
-        // เพิ่มคอลเลคชันใหม่
         response = await fetch('/api/collections', {
           method: 'POST',
           headers: {
@@ -151,32 +138,28 @@ export default function CollectionsPage() {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการบันทึกคอลเลคชัน');
       }
-      
-      // รีเซ็ตฟอร์ม
+    
       setFormData({ id: 0, name: '', description: '' });
       setShowForm(false);
-      
-      // แสดงข้อความสำเร็จ
       setSuccess(isEditing ? 'แก้ไขคอลเลคชันสำเร็จ' : 'เพิ่มคอลเลคชันสำเร็จ');
-      
-      // โหลดข้อมูลคอลเลคชันใหม่
+
       const fetchResponse = await fetch('/api/collections');
       const fetchData = await fetchResponse.json();
+
       setCollections(fetchData);
       setTotalCollections(fetchData.length);
-      
-      // ลบข้อความสำเร็จหลัง 3 วินาที
+
       setTimeout(() => {
         setSuccess(null);
-      }, 3000);
+      }, 2000);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกคอลเลคชัน');
     } finally {
       setSubmitting(false);
     }
   };
-  
-  // ลบคอลเลคชัน
+
   const handleDeleteCollection = async (id: number) => {
     if (!confirm('คุณต้องการลบคอลเลคชันนี้ใช่หรือไม่?')) {
       return;
@@ -191,50 +174,27 @@ export default function CollectionsPage() {
         const data = await response.json();
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการลบคอลเลคชัน');
       }
-      
-      // แสดงข้อความสำเร็จ
+
       setSuccess('ลบคอลเลคชันสำเร็จ');
-      
-      // โหลดข้อมูลคอลเลคชันใหม่
+
       const fetchResponse = await fetch('/api/collections');
       const data = await fetchResponse.json();
+
       setCollections(data);
       setTotalCollections(data.length);
-      
-      // ลบข้อความสำเร็จหลัง 3 วินาที
+
       setTimeout(() => {
         setSuccess(null);
-      }, 3000);
+      }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบคอลเลคชัน');
-      
-      // ลบข้อความข้อผิดพลาดหลัง 3 วินาที
+
       setTimeout(() => {
         setError(null);
-      }, 3000);
+      }, 2000);
     }
   };
-  
-  // ฟังก์ชันแปลงวันที่ให้อยู่ในรูปแบบไทย
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-  
-  if (status === 'loading') {
-    return (
-      <DashboardLayout>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-xl">กำลังโหลดข้อมูล...</div>
-        </div>
-      </DashboardLayout>
-    );
-  }
-  
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-8">
@@ -260,13 +220,11 @@ export default function CollectionsPage() {
             <strong>สำเร็จ!</strong> {success}
           </div>
         )}
-        
-        {/* จำนวนคอลเลคชันทั้งหมด */}
+
         <div className="mb-4 text-gray-600">
           จำนวนคอลเลคชันทั้งหมด: <span className="font-medium">{totalCollections}</span> / <span className="font-medium">20</span> รายการ
         </div>
-        
-        {/* ฟอร์มเพิ่ม/แก้ไขคอลเลคชัน */}
+
         {showForm && (
           <div className="bg-white p-6 rounded shadow-md mb-6">
             <div className="flex justify-between items-center mb-4">
@@ -327,15 +285,13 @@ export default function CollectionsPage() {
             </form>
           </div>
         )}
-        
-        {/* ตารางแสดงข้อมูลคอลเลคชัน */}
+
         <div className="bg-white rounded shadow overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ชื่อคอลเลคชัน</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">คำอธิบาย</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">วันที่สร้าง</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">จัดการ</th>
               </tr>
             </thead>
@@ -366,9 +322,6 @@ export default function CollectionsPage() {
                           <span className="text-gray-400">-</span>
                         )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-500">{formatDate(collection.create_Date)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex space-x-2">

@@ -1,4 +1,3 @@
-// src/app/api/auth/admin/delete/route.ts
 import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
@@ -9,8 +8,7 @@ const prisma = new PrismaClient()
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
-        
-        // ตรวจสอบสิทธิ์การเข้าถึง (เฉพาะ superadmin)
+
         if (!session?.user || session.user.role !== 'superadmin') {
             return Response.json({ error: 'Unauthorized' }, { status: 403 })
         }
@@ -20,13 +18,11 @@ export async function POST(request: NextRequest) {
         if (!adminId) {
             return Response.json({ error: 'Admin ID is required' }, { status: 400 })
         }
-        
-        // ป้องกันไม่ให้ลบตัวเอง
+
         if (adminId === session.user.id) {
             return Response.json({ error: 'ไม่สามารถลบบัญชีของตัวเองได้' }, { status: 400 })
         }
-        
-        // ตรวจสอบว่า admin ที่ต้องการลบมีอยู่จริง
+
         const adminExists = await prisma.accountAdmin.findUnique({
             where: { id: adminId }
         })
@@ -34,8 +30,7 @@ export async function POST(request: NextRequest) {
         if (!adminExists) {
             return Response.json({ error: 'Admin not found' }, { status: 404 })
         }
-        
-        // ลบ admin
+
         await prisma.accountAdmin.delete({
             where: { id: adminId }
         })

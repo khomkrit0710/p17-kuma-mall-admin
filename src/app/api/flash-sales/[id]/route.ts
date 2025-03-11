@@ -5,13 +5,11 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-// ดึงข้อมูล Flash Sale ตาม ID
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -21,8 +19,7 @@ export async function GET(
     }
 
     const flashSaleId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(flashSaleId)) {
       return NextResponse.json(
         { error: "รหัส Flash Sale ไม่ถูกต้อง" },
@@ -30,7 +27,6 @@ export async function GET(
       );
     }
 
-    // ดึงข้อมูล Flash Sale พร้อมข้อมูลสินค้า
     const flashSale = await prisma.flash_sale.findUnique({
       where: { id: flashSaleId },
       include: {
@@ -64,13 +60,11 @@ export async function GET(
   }
 }
 
-// อัปเดตข้อมูล Flash Sale
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -80,8 +74,7 @@ export async function PUT(
     }
 
     const flashSaleId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(flashSaleId)) {
       return NextResponse.json(
         { error: "รหัส Flash Sale ไม่ถูกต้อง" },
@@ -89,7 +82,6 @@ export async function PUT(
       );
     }
 
-    // ตรวจสอบว่ามี Flash Sale นี้อยู่จริงหรือไม่
     const existingFlashSale = await prisma.flash_sale.findUnique({
       where: { id: flashSaleId }
     });
@@ -111,7 +103,6 @@ export async function PUT(
       status = null
     } = await request.json();
 
-    // ตรวจสอบข้อมูลที่จำเป็น
     if (!start_date || !end_date || quantity === undefined || flash_sale_price === undefined || price_origin === undefined || flash_sale_per === undefined) {
       return NextResponse.json(
         { error: "กรุณากรอกข้อมูลให้ครบถ้วน" },
@@ -119,7 +110,6 @@ export async function PUT(
       );
     }
 
-    // กำหนดสถานะ Flash Sale โดยอัตโนมัติ
     let calculatedStatus = status;
     
     if (!status) {
@@ -128,15 +118,14 @@ export async function PUT(
       const now = new Date();
 
       if (startDate > now) {
-        calculatedStatus = "pending"; // กำลังจะเริ่ม
+        calculatedStatus = "pending";
       } else if (endDate < now) {
-        calculatedStatus = "expired"; // หมดเวลา
+        calculatedStatus = "expired";
       } else {
-        calculatedStatus = "active"; // กำลังดำเนินการ
+        calculatedStatus = "active";
       }
     }
 
-    // อัปเดตข้อมูล Flash Sale
     const updatedFlashSale = await prisma.flash_sale.update({
       where: { id: flashSaleId },
       data: {
@@ -164,14 +153,13 @@ export async function PUT(
   }
 }
 
-// ลบ Flash Sale
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -180,8 +168,7 @@ export async function DELETE(
     }
 
     const flashSaleId = parseInt((await params).id);
-    
-    // ตรวจสอบว่า ID เป็นตัวเลขหรือไม่
+
     if (isNaN(flashSaleId)) {
       return NextResponse.json(
         { error: "รหัส Flash Sale ไม่ถูกต้อง" },
@@ -189,7 +176,6 @@ export async function DELETE(
       );
     }
 
-    // ตรวจสอบว่ามี Flash Sale นี้อยู่จริงหรือไม่
     const existingFlashSale = await prisma.flash_sale.findUnique({
       where: { id: flashSaleId }
     });
@@ -201,7 +187,6 @@ export async function DELETE(
       );
     }
 
-    // ลบ Flash Sale
     await prisma.flash_sale.delete({
       where: { id: flashSaleId }
     });

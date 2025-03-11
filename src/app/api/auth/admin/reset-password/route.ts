@@ -1,4 +1,3 @@
-// src/app/api/auth/admin/reset-password/route.ts
 import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
@@ -10,8 +9,7 @@ const prisma = new PrismaClient()
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
-        
-        // ตรวจสอบสิทธิ์การเข้าถึง (เฉพาะ superadmin)
+
         if (!session?.user || session.user.role !== 'superadmin') {
             return Response.json({ error: 'Unauthorized' }, { status: 403 })
         }
@@ -21,8 +19,7 @@ export async function POST(request: NextRequest) {
         if (!adminId || !password) {
             return Response.json({ error: 'Admin ID and password are required' }, { status: 400 })
         }
-        
-        // ตรวจสอบว่า admin ที่ต้องการแก้ไขมีอยู่จริง
+
         const adminExists = await prisma.accountAdmin.findUnique({
             where: { id: adminId }
         })

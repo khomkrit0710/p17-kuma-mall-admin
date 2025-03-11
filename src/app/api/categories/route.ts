@@ -7,8 +7,8 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+    
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -16,7 +16,6 @@ export async function GET() {
       );
     }
 
-    // ดึงข้อมูลหมวดหมู่ทั้งหมด
     const categories = await prisma.category.findMany({
       select: {
         id: true,
@@ -41,8 +40,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -59,7 +58,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // ตรวจสอบว่ามีหมวดหมู่ชื่อนี้อยู่แล้วหรือไม่
     const existingCategory = await prisma.category.findUnique({
       where: { name },
     });
@@ -71,7 +69,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // สร้างหมวดหมู่ใหม่
     const newCategory = await prisma.category.create({
       data: {
         name,

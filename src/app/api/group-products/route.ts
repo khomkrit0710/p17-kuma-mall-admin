@@ -5,11 +5,10 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-// API สำหรับดึงข้อมูลกลุ่มสินค้าทั้งหมด
 export async function GET(request: Request) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "กรุณาเข้าสู่ระบบ" },
@@ -17,15 +16,11 @@ export async function GET(request: Request) {
       );
     }
 
-    // รับพารามิเตอร์จาก URL
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const search = searchParams.get("search") || "";
-    
     const skip = (page - 1) * limit;
-
-    // สร้างเงื่อนไขการค้นหา
     const whereCondition: Prisma.group_productWhereInput = search
     ? {
         OR: [
@@ -34,8 +29,6 @@ export async function GET(request: Request) {
         ],
       }
     : {};
-
-    // ดึงข้อมูลกลุ่มสินค้าพร้อมความสัมพันธ์
     const groups = await prisma.group_product.findMany({
       where: whereCondition,
       include: {
@@ -52,7 +45,7 @@ export async function GET(request: Request) {
               },
             },
           },
-          take: 5, // แสดงสินค้าแค่ 5 รายการต่อกลุ่ม
+          take: 5,
         },
       },
       orderBy: {
@@ -62,14 +55,12 @@ export async function GET(request: Request) {
       take: limit,
     });
 
-    // นับจำนวนกลุ่มสินค้าทั้งหมด
     const totalGroups = await prisma.group_product.count({
       where: whereCondition,
     });
 
     const totalPages = Math.ceil(totalGroups / limit);
 
-    // แปลงข้อมูลให้อยู่ในรูปแบบที่เหมาะสม
     const formattedGroups = groups.map((group) => {
       return {
         id: group.id,
@@ -108,10 +99,8 @@ export async function GET(request: Request) {
   }
 }
 
-// API สำหรับสร้างกลุ่มสินค้าใหม่
 export async function POST(request: Request) {
   try {
-    // ตรวจสอบสิทธิ์การเข้าถึง
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
@@ -124,11 +113,10 @@ export async function POST(request: Request) {
       group_name, 
       description = "", 
       main_img_url = [],
-      categories = [], // รับรายการ ID ของหมวดหมู่
-      collections = [] // รับรายการ ID ของคอลเลคชัน
+      categories = [],
+      collections = []
     } = await request.json();
 
-    // ตรวจสอบข้อมูลที่จำเป็น
     if (!group_name) {
       return NextResponse.json({ 
         success: false, 
@@ -136,9 +124,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // สร้างกลุ่มสินค้าใหม่พร้อมความสัมพันธ์ใน transaction
     const result = await prisma.$transaction(async (tx) => {
-      // 1. สร้างกลุ่มสินค้าใหม่
       const newGroup = await tx.group_product.create({
         data: {
           group_name,
@@ -147,7 +133,6 @@ export async function POST(request: Request) {
         }
       });
 
-      // 2. สร้างความสัมพันธ์กับหมวดหมู่
       if (categories.length > 0) {
         const categoryConnections = categories.map((categoryId: string) => ({
           group_id: newGroup.id,
@@ -159,7 +144,6 @@ export async function POST(request: Request) {
         });
       }
 
-      // 3. สร้างความสัมพันธ์กับคอลเลคชัน
       if (collections.length > 0) {
         const collectionConnections = collections.map((collectionId: string) => ({
           group_id: newGroup.id,

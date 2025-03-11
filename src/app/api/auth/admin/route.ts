@@ -9,8 +9,7 @@ const prisma = new PrismaClient()
 export async function GET() {
     try {
         const session = await getServerSession(authOptions)
-        
-        // ตรวจสอบสิทธิ์การเข้าถึง (เฉพาะ superadmin)
+
         if (!session?.user || session.user.role !== 'superadmin') {
             return Response.json({ error: 'Unauthorized' }, { status: 403 })
         }
@@ -27,8 +26,7 @@ export async function GET() {
                 createdAt: 'desc'
             }
         })
-        
-        // แปลงข้อมูลให้ตรงกับรูปแบบที่ใช้ในหน้าจัดการ admin
+
         const formattedAdmins = admins.map(admin => ({
             id: admin.id,
             username: admin.name || admin.email,
@@ -47,8 +45,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
-        
-        // ตรวจสอบสิทธิ์การเข้าถึง (เฉพาะ superadmin)
+
         if (!session?.user || session.user.role !== 'superadmin') {
             return Response.json({ error: 'Unauthorized' }, { status: 403 })
         }
@@ -58,8 +55,7 @@ export async function POST(request: NextRequest) {
         if (!username || !password) {
             return Response.json({ error: 'Username and password are required' }, { status: 400 })
         }
-        
-        // ตรวจสอบความถูกต้องของ role
+
         const validRole = role === 'SUPER_ADMIN' ? 'superadmin' : 'admin'
         
         const hashedPassword = await bcrypt.hash(password, 10)
@@ -67,7 +63,7 @@ export async function POST(request: NextRequest) {
         const newAdmin = await prisma.accountAdmin.create({
             data: {
                 name: username,
-                email: username, // ใช้ username เป็น email ในกรณีที่ไม่ได้รับ email มา
+                email: username,
                 password: hashedPassword,
                 role: validRole
             }
