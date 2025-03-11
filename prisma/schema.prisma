@@ -53,8 +53,9 @@ model group_product {
   main_img_url    String[]    @default([]) 
   description     String      @db.Text @default("")
   
-  // Relations
   products        product_to_group[] 
+  group_categories    group_to_category[]
+  group_collections   group_to_collection[]
 }
 
 // ตารางหมวดหมู่สินค้า (Category)
@@ -62,11 +63,11 @@ model category {
   id              Int         @id @default(autoincrement())
   uuid            String      @default(uuid())
   create_Date     DateTime    @default(now())
-  name            String      @unique // ชื่อหมวดหมู่ต้องไม่ซ้ำกัน
+  name            String      @unique
   description     String?     @db.Text
   
-  // Relations
   products        product_to_category[]
+  groups          group_to_category[]
 }
 
 // ตารางคอลเลคชัน (Collection)
@@ -74,11 +75,12 @@ model collection {
   id              Int         @id @default(autoincrement())
   uuid            String      @default(uuid())
   create_Date     DateTime    @default(now())
-  name            String      @unique // ชื่อคอลเลคชันต้องไม่ซ้ำกัน
+  name            String      @unique
   description     String?     @db.Text
   
   // Relations
   products        product_to_collection[]
+    groups          group_to_collection[]
 }
 
 // ตารางเชื่อมระหว่าง product และ group_product (many-to-many)
@@ -117,6 +119,30 @@ model product_to_collection {
   
   @@id([product_id, collection_id])
   @@index([product_id])
+  @@index([collection_id])
+}
+
+model group_to_category {
+  group_id      Int
+  category_id   Int
+  
+  group         group_product  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  category      category       @relation(fields: [category_id], references: [id])
+  
+  @@id([group_id, category_id])
+  @@index([group_id])
+  @@index([category_id])
+}
+
+model group_to_collection {
+  group_id       Int
+  collection_id  Int
+  
+  group          group_product  @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  collection     collection     @relation(fields: [collection_id], references: [id])
+  
+  @@id([group_id, collection_id])
+  @@index([group_id])
   @@index([collection_id])
 }
 

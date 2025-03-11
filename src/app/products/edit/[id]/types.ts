@@ -7,6 +7,8 @@ export type GroupProductData = {
     main_img_url: string[];
     create_Date: string;
     products: ProductData[];
+    categories?: { id: number; name: string }[]; 
+    collections?: { id: number; name: string }[];
   };
   
   export type ProductData = {

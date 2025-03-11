@@ -6,14 +6,13 @@ import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
 import TagMultiSelect from '@/component/TagMultiSelect';
-// กำหนดประเภทของข้อมูลกลุ่มสินค้า
+
 type GroupProductFormData = {
   group_name: string;
   description: string;
   main_img_url: string[];
 };
 
-// กำหนดประเภทของข้อมูลสินค้า
 type ProductFormData = {
   sku: string;
   name_sku: string;
@@ -29,7 +28,6 @@ type ProductFormData = {
   collections: string[];
 };
 
-// กำหนดประเภทของหมวดหมู่และคอลเลคชัน
 type Category = {
   id: number;
   name: string;
@@ -43,18 +41,20 @@ type Collection = {
 export default function AddProductPage() {
   const router = useRouter();
   const { status } = useSession();
-  
-  // สถานะสำหรับการตรวจสอบขั้นตอนการสร้าง
   const [currentStep, setCurrentStep] = useState<'group' | 'products'>('group');
-  
-  // สถานะสำหรับกลุ่มสินค้า
-  const [groupData, setGroupData] = useState<GroupProductFormData>({
+  const [groupData, setGroupData] = useState<{
+    group_name: string;
+    description: string;
+    main_img_url: string[];
+    categories: string[];
+    collections: string[];
+  }>({
     group_name: '',
     description: '',
     main_img_url: [],
+    categories: [],
+    collections: []
   });
-  
-  // สถานะสำหรับรายการสินค้า
   const [productsList, setProductsList] = useState<ProductFormData[]>([{
     sku: '',
     name_sku: '',
@@ -69,28 +69,21 @@ export default function AddProductPage() {
     categories: [],
     collections: []
   }]);
-  
-  // สถานะสำหรับข้อผิดพลาดและการโหลด
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
-  
-  // สถานะสำหรับหมวดหมู่และคอลเลคชัน
   const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
-  
-  // สถานะสำหรับการอัปโหลดรูปภาพ
   const [uploading, setUploading] = useState(false);
   const [mainImagePreview, setMainImagePreview] = useState<string[]>([]);
-  
-  // ตรวจสอบการเข้าสู่ระบบ
+  const [groupCategories, setGroupCategories] = useState<string[]>([]);
+  const [groupCollections, setGroupCollections] = useState<string[]>([]);
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
   
-  // โหลดข้อมูลหมวดหมู่และคอลเลคชัน
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -119,8 +112,7 @@ export default function AddProductPage() {
     fetchCategories();
     fetchCollections();
   }, []);
-  
-  // จัดการการเปลี่ยนแปลงข้อมูลกลุ่มสินค้า
+
   const handleGroupChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setGroupData({
@@ -373,12 +365,18 @@ export default function AddProductPage() {
       }
       
       // 3. สร้างกลุ่มสินค้า
+      const groupPostData = {
+        ...groupData,
+        categories: groupCategories,
+        collections: groupCollections
+      };
+      
       const groupResponse = await fetch('/api/group-products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(groupData),
+        body: JSON.stringify(groupPostData),
       });
       
       if (!groupResponse.ok) {
@@ -497,6 +495,48 @@ export default function AddProductPage() {
                   onChange={handleGroupChange}
                   className="w-full p-2 border border-gray-300 rounded h-24"
                 />
+              </div>
+              
+              {/* ส่วนเลือกหมวดหมู่สำหรับกลุ่มสินค้า */}
+              <div>
+                <TagMultiSelect
+                  id="group-categories"
+                  label="หมวดหมู่ของกลุ่ม"
+                  options={categories}
+                  selectedValues={groupCategories}
+                  onChange={(selectedValues) => {
+                    setGroupCategories(selectedValues);
+                    setGroupData({
+                      ...groupData,
+                      categories: selectedValues
+                    });
+                  }}
+                  placeholder="เลือกหมวดหมู่..."
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  หมวดหมู่ที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าทั้งหมดในกลุ่มนี้
+                </p>
+              </div>
+              
+              {/* ส่วนเลือกคอลเลคชันสำหรับกลุ่มสินค้า */}
+              <div>
+                <TagMultiSelect
+                  id="group-collections"
+                  label="คอลเลคชันของกลุ่ม"
+                  options={collections}
+                  selectedValues={groupCollections}
+                  onChange={(selectedValues) => {
+                    setGroupCollections(selectedValues);
+                    setGroupData({
+                      ...groupData,
+                      collections: selectedValues
+                    });
+                  }}
+                  placeholder="เลือกคอลเลคชัน..."
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  คอลเลคชันที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าทั้งหมดในกลุ่มนี้
+                </p>
               </div>
               
               <div>
@@ -777,38 +817,6 @@ export default function AddProductPage() {
                           onChange={(e) => handleProductChange(index, e)}
                           className="w-full p-2 border border-gray-300 rounded"
                           min="0"
-                        />
-                      </div>
-                      
-                      {/* หมวดหมู่ */}
-                      <div>
-                        <TagMultiSelect
-                          id={`categories-${index}`}
-                          label="หมวดหมู่"
-                          options={categories}
-                          selectedValues={product.categories}
-                          onChange={(selectedValues) => {
-                            const updatedProducts = [...productsList];
-                            updatedProducts[index].categories = selectedValues;
-                            setProductsList(updatedProducts);
-                          }}
-                          placeholder="เลือกหมวดหมู่..."
-                        />
-                      </div>
-                      
-                      {/* คอลเลคชัน */}
-                      <div>
-                        <TagMultiSelect
-                          id={`collections-${index}`}
-                          label="คอลเลคชัน"
-                          options={collections}
-                          selectedValues={product.collections}
-                          onChange={(selectedValues) => {
-                            const updatedProducts = [...productsList];
-                            updatedProducts[index].collections = selectedValues;
-                            setProductsList(updatedProducts);
-                          }}
-                          placeholder="เลือกคอลเลคชัน..."
                         />
                       </div>
                     </div>

@@ -37,7 +37,19 @@ export async function POST(request: Request) {
 
     // ตรวจสอบว่ามีกลุ่มสินค้านี้อยู่จริงหรือไม่
     const existingGroup = await prisma.group_product.findUnique({
-      where: { id: group_id }
+      where: { id: group_id },
+      include: {
+        group_categories: {
+          include: {
+            category: true
+          }
+        },
+        group_collections: {
+          include: {
+            collection: true
+          }
+        }
+      }
     });
 
     if (!existingGroup) {
@@ -46,6 +58,10 @@ export async function POST(request: Request) {
         error: "ไม่พบกลุ่มสินค้า" 
       }, { status: 404 });
     }
+
+    // ดึงรายการ ID ของหมวดหมู่และคอลเลคชันจากกลุ่ม
+    const groupCategoryIds = existingGroup.group_categories.map(gc => gc.category_id.toString());
+    const groupCollectionIds = existingGroup.group_collections.map(gc => gc.collection_id.toString());
 
     // ตรวจสอบการซ้ำของ SKU
     const skus = products.map((product: { sku: string }) => product.sku);
@@ -107,9 +123,12 @@ export async function POST(request: Request) {
           }
         });
 
+        // รวมหมวดหมู่ที่เลือกโดยผู้ใช้และหมวดหมู่ของกลุ่ม
+        const allCategories = [...new Set([...categories, ...groupCategoryIds])];
+        
         // สร้างความสัมพันธ์กับหมวดหมู่ (ถ้ามี)
-        if (categories.length > 0) {
-          const categoryConnections = categories.map((categoryId: string) => ({
+        if (allCategories.length > 0) {
+          const categoryConnections = allCategories.map((categoryId: string) => ({
             product_id: newProduct.id,
             category_id: parseInt(categoryId)
           }));
@@ -119,9 +138,12 @@ export async function POST(request: Request) {
           });
         }
 
+        // รวมคอลเลคชันที่เลือกโดยผู้ใช้และคอลเลคชันของกลุ่ม
+        const allCollections = [...new Set([...collections, ...groupCollectionIds])];
+        
         // สร้างความสัมพันธ์กับคอลเลคชัน (ถ้ามี)
-        if (collections.length > 0) {
-          const collectionConnections = collections.map((collectionId: string) => ({
+        if (allCollections.length > 0) {
+          const collectionConnections = allCollections.map((collectionId: string) => ({
             product_id: newProduct.id,
             collection_id: parseInt(collectionId)
           }));

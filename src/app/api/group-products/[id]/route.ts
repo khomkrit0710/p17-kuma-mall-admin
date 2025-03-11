@@ -20,7 +20,6 @@ export async function GET(
       );
     }
 
-    // ต้อง await params ก่อนใช้งาน
     const { id } = await params;
     const groupId = parseInt(id);
     
@@ -32,7 +31,6 @@ export async function GET(
       );
     }
 
-    // ดึงข้อมูลกลุ่มสินค้าพร้อมสินค้าในกลุ่ม
     const group = await prisma.group_product.findUnique({
       where: { id: groupId },
       include: {
@@ -68,6 +66,16 @@ export async function GET(
                 flash_sale: true
               }
             }
+          }
+        },
+        group_categories: {
+          include: {
+            category: true
+          }
+        },
+        group_collections: {
+          include: {
+            collection: true
           }
         }
       }
@@ -118,6 +126,18 @@ export async function GET(
       };
     });
 
+    // จัดรูปแบบหมวดหมู่ของกลุ่ม
+    const groupCategories = group.group_categories.map(gc => ({
+      id: gc.category.id,
+      name: gc.category.name
+    }));
+
+    // จัดรูปแบบคอลเลคชันของกลุ่ม
+    const groupCollections = group.group_collections.map(gc => ({
+      id: gc.collection.id,
+      name: gc.collection.name
+    }));
+
     // ส่งข้อมูลกลับไปยังไคลเอนต์
     return NextResponse.json({
       id: group.id,
@@ -126,7 +146,9 @@ export async function GET(
       description: group.description,
       main_img_url: group.main_img_url,
       create_Date: group.create_Date,
-      products: formattedProducts
+      products: formattedProducts,
+      categories: groupCategories,
+      collections: groupCollections
     });
   } catch (error) {
     console.error("Error fetching group product:", error);
@@ -152,7 +174,6 @@ export async function PUT(
       );
     }
 
-    // ต้อง await params ก่อนใช้งาน
     const { id } = await params;
     const groupId = parseInt(id);
     
@@ -176,7 +197,13 @@ export async function PUT(
       );
     }
 
-    const { group_name, description = "", main_img_url = [] } = await request.json();
+    const { 
+      group_name, 
+      description = "", 
+      main_img_url = [],
+      categories = [],
+      collections = []
+    } = await request.json();
 
     if (!group_name) {
       return NextResponse.json(
@@ -185,34 +212,66 @@ export async function PUT(
       );
     }
 
-    // อัปเดตข้อมูลกลุ่มสินค้า
-    const updatedGroup = await prisma.group_product.update({
-      where: { id: groupId },
-      data: {
-        group_name,
-        description,
-        main_img_url
-      }
-    });
-
-    // อัปเดตชื่อกลุ่มในสินค้าทุกตัวที่อยู่ในกลุ่มนี้
-    await prisma.product.updateMany({
-      where: {
-        product_group: {
-          some: {
-            group_id: groupId
-          }
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedGroup = await tx.group_product.update({
+        where: { id: groupId },
+        data: {
+          group_name,
+          description,
+          main_img_url
         }
-      },
-      data: {
-        group_name: group_name
+      });
+
+      await tx.product.updateMany({
+        where: {
+          product_group: {
+            some: {
+              group_id: groupId
+            }
+          }
+        },
+        data: {
+          group_name: group_name
+        }
+      });
+
+      await tx.group_to_category.deleteMany({
+        where: { group_id: groupId }
+      });
+
+      if (categories.length > 0) {
+        const categoryConnections = categories.map((categoryId: string) => ({
+          group_id: groupId,
+          category_id: parseInt(categoryId)
+        }));
+
+        await tx.group_to_category.createMany({
+          data: categoryConnections
+        });
       }
+
+      await tx.group_to_collection.deleteMany({
+        where: { group_id: groupId }
+      });
+
+      if (collections.length > 0) {
+        const collectionConnections = collections.map((collectionId: string) => ({
+          group_id: groupId,
+          collection_id: parseInt(collectionId)
+        }));
+
+        await tx.group_to_collection.createMany({
+          data: collectionConnections
+        });
+      }
+
+      return updatedGroup;
     });
 
     return NextResponse.json({
       success: true,
       message: "อัปเดตกลุ่มสินค้าสำเร็จ",
-      data: updatedGroup
+      data: result
     });
   } catch (error) {
     console.error("Error updating group product:", error);
@@ -223,7 +282,6 @@ export async function PUT(
   }
 }
 
-// ลบกลุ่มสินค้า
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -238,7 +296,6 @@ export async function DELETE(
       );
     }
 
-    // ต้อง await params ก่อนใช้งาน
     const { id } = await params;
     const groupId = parseInt(id);
     
