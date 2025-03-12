@@ -5,6 +5,20 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
+function calculateFlashSaleStatus(startDate: Date, endDate: Date, quantity: number): string {
+  const now = new Date();
+  
+  if (quantity <= 0) {
+    return "sold_out";
+  } else if (now < startDate) {
+    return "pending";
+  } else if (now > endDate) {
+    return "expired";
+  } else {
+    return "active";
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -55,6 +69,28 @@ export async function GET(request: Request) {
       take: limit
     });
 
+    const updatedFlashSales = [];
+    for (const flashSale of flashSales) {
+      const startDate = new Date(flashSale.start_date);
+      const endDate = new Date(flashSale.end_date);
+      const currentStatus = flashSale.status;
+      const newStatus = calculateFlashSaleStatus(startDate, endDate, flashSale.quantity);
+      
+      if (currentStatus !== newStatus) {
+        await prisma.flash_sale.update({
+          where: { id: flashSale.id },
+          data: { status: newStatus }
+        });
+
+        updatedFlashSales.push({
+          ...flashSale,
+          status: newStatus
+        });
+      } else {
+        updatedFlashSales.push(flashSale);
+      }
+    }
+
     const totalFlashSales = await prisma.flash_sale.count({
       where: whereCondition
     });
@@ -62,7 +98,7 @@ export async function GET(request: Request) {
     const totalPages = Math.ceil(totalFlashSales / limit);
 
     return NextResponse.json({
-      data: flashSales,
+      data: updatedFlashSales,
       pagination: {
         total: totalFlashSales,
         page,
@@ -97,8 +133,7 @@ export async function POST(request: Request) {
       quantity,
       flash_sale_price,
       flash_sale_per,
-      price_origin,
-      status = "active"
+      price_origin
     } = await request.json();
 
     if (!sku || !start_date || !end_date || quantity === undefined || flash_sale_price === undefined || price_origin === undefined || flash_sale_per === undefined) {
@@ -122,37 +157,60 @@ export async function POST(request: Request) {
     const existingFlashSale = await prisma.flash_sale.findUnique({
       where: { sku }
     });
-
+    
     if (existingFlashSale) {
+      if (existingFlashSale.status === 'active' || existingFlashSale.status === 'pending') {
+        return NextResponse.json(
+          { error: "สินค้านี้มี Flash Sale ที่กำลังดำเนินการหรือกำลังจะเริ่มอยู่แล้ว" },
+          { status: 400 }
+        );
+      }
+
+      if (existingFlashSale.status === 'expired' || existingFlashSale.status === 'sold_out') {
+        const startDate = new Date(start_date);
+        const endDate = new Date(end_date);
+        const status = calculateFlashSaleStatus(startDate, endDate, Number(quantity));
+        
+        const updatedFlashSale = await prisma.flash_sale.update({
+          where: { id: existingFlashSale.id },
+          data: {
+            start_date: startDate,
+            end_date: endDate,
+            quantity: Number(quantity),
+            flash_sale_price: Number(flash_sale_price),
+            flash_sale_per: Number(flash_sale_per),
+            price_origin: Number(price_origin),
+            status: status
+          }
+        });
+    
+        return NextResponse.json({
+          success: true,
+          message: `อัปเดต Flash Sale จากเดิมที่${existingFlashSale.status === 'expired' ? "หมดเวลา" : "สินค้าหมด"}แล้วสำเร็จ`,
+          data: updatedFlashSale
+        });
+      }
+
       return NextResponse.json(
         { error: "สินค้านี้มี Flash Sale อยู่แล้ว" },
         { status: 400 }
       );
     }
 
-    let calculatedStatus = status;
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
-    const now = new Date();
-
-    if (startDate > now) {
-      calculatedStatus = "pending"; 
-    } else if (endDate < now) {
-      calculatedStatus = "expired";
-    } else {
-      calculatedStatus = "active";
-    }
+    const status = calculateFlashSaleStatus(startDate, endDate, Number(quantity));
 
     const newFlashSale = await prisma.flash_sale.create({
       data: {
         sku,
-        start_date: new Date(start_date),
-        end_date: new Date(end_date),
+        start_date: startDate,
+        end_date: endDate,
         quantity: Number(quantity),
         flash_sale_price: Number(flash_sale_price),
         flash_sale_per: Number(flash_sale_per),
         price_origin: Number(price_origin),
-        status: calculatedStatus
+        status
       }
     });
 

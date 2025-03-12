@@ -29,6 +29,7 @@ export async function GET(request: Request) {
         ],
       }
     : {};
+    
     const groups = await prisma.group_product.findMany({
       where: whereCondition,
       include: {
@@ -61,7 +62,44 @@ export async function GET(request: Request) {
 
     const totalPages = Math.ceil(totalGroups / limit);
 
-    const formattedGroups = groups.map((group) => {
+    const formattedGroups = await Promise.all(groups.map(async (group) => {
+      const productSkus = group.products.map(rel => rel.product.sku);
+      const flashSales = await prisma.flash_sale.findMany({
+        where: {
+          sku: {
+            in: productSkus
+          }
+        },
+        select: {
+          sku: true,
+          status: true,
+          flash_sale_price: true,
+          flash_sale_per: true
+        }
+      });
+
+      const flashSaleMap = new Map();
+      flashSales.forEach(fs => {
+        flashSaleMap.set(fs.sku, fs);
+      });
+
+      const productsWithFlashSale = group.products.map(relation => {
+        const product = relation.product;
+        const flashSale = flashSaleMap.get(product.sku) || null;
+        
+        return {
+          id: product.id,
+          sku: product.sku,
+          name_sku: product.name_sku,
+          img_url: product.img_url,
+          price_origin: product.price_origin,
+          quantity: product.quantity,
+          flash_sale: flashSale
+        };
+      });
+      
+      const hasFlashSale = flashSales.length > 0;
+      
       return {
         id: group.id,
         uuid: group.uuid,
@@ -69,17 +107,11 @@ export async function GET(request: Request) {
         description: group.description,
         main_img_url: group.main_img_url,
         create_Date: group.create_Date,
-        products: group.products.map((relation) => ({
-          id: relation.product.id,
-          sku: relation.product.sku,
-          name_sku: relation.product.name_sku,
-          img_url: relation.product.img_url,
-          price_origin: relation.product.price_origin,
-          quantity: relation.product.quantity,
-        })),
+        products: productsWithFlashSale,
         total_products: group.products.length,
+        has_flash_sale: hasFlashSale
       };
-    });
+    }));
 
     return NextResponse.json({
       data: formattedGroups,

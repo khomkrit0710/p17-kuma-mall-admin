@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
-// กำหนดประเภทข้อมูลกลุ่มสินค้า
+
 type GroupProduct = {
   id: number;
   uuid: string;
@@ -16,9 +16,9 @@ type GroupProduct = {
   create_Date: string;
   products: ProductBrief[];
   total_products: number;
+  has_flash_sale?: boolean;
 };
 
-// กำหนดประเภทข้อมูลสินค้าแบบย่อ
 type ProductBrief = {
   id: number;
   sku: string;
@@ -26,9 +26,11 @@ type ProductBrief = {
   price_origin: number;
   quantity: number;
   img_url: string | null;
+  flash_sale?: {
+    status: string;
+  } | null;
 };
 
-// กำหนดประเภทข้อมูล pagination
 type Pagination = {
   total: number;
   page: number;
@@ -39,8 +41,6 @@ type Pagination = {
 export default function ProductList() {
   const router = useRouter();
   const { status } = useSession();
-  
-  // สถานะสำหรับรายการกลุ่มสินค้า
   const [groups, setGroups] = useState<GroupProduct[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
@@ -48,28 +48,20 @@ export default function ProductList() {
     limit: 10,
     totalPages: 0,
   });
-  
-  // สถานะสำหรับการค้นหาและกรอง
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  
-  // สถานะสำหรับการโหลดและข้อผิดพลาด
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
-  // สถานะสำหรับการลบ
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [groupToDelete, setGroupToDelete] = useState<number | null>(null);
-  
-  // ตรวจสอบการเข้าสู่ระบบ
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
     }
   }, [status, router]);
   
-  // โหลดข้อมูลกลุ่มสินค้า
   useEffect(() => {
     if (status !== 'authenticated') return;
     
@@ -94,7 +86,16 @@ export default function ProductList() {
         }
         
         const data = await response.json();
-        setGroups(data.data);
+
+        const groupsWithFlashSaleStatus = data.data.map((group: GroupProduct) => {
+          const hasFlashSale = group.products.some(product => product.flash_sale !== null);
+          return {
+            ...group,
+            has_flash_sale: hasFlashSale
+          };
+        });
+        
+        setGroups(groupsWithFlashSaleStatus);
         setPagination(data.pagination);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการโหลดข้อมูล');
@@ -105,38 +106,32 @@ export default function ProductList() {
     
     fetchGroups();
   }, [pagination.page, pagination.limit, search, status]);
-  
-  // จัดการการเปลี่ยนหน้า
+
   const handlePageChange = (newPage: number) => {
     setPagination({ ...pagination, page: newPage });
   };
-  
-  // จัดการการค้นหา
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setSearch(searchInput);
-    setPagination({ ...pagination, page: 1 }); // รีเซ็ตกลับไปหน้าแรกเมื่อค้นหา
+    setPagination({ ...pagination, page: 1 }); 
   };
-  
-  // จัดการการเปลี่ยนจำนวนรายการต่อหน้า
+
   const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLimit = parseInt(e.target.value);
     setPagination({ ...pagination, page: 1, limit: newLimit });
   };
-  
-  // แสดงกล่องยืนยันการลบ
+
   const confirmDeleteGroup = (groupId: number) => {
     setGroupToDelete(groupId);
     setDeleteDialogOpen(true);
   };
-  
-  // ปิดกล่องยืนยันการลบ
+
   const closeDeleteDialog = () => {
     setGroupToDelete(null);
     setDeleteDialogOpen(false);
   };
-  
-  // ดำเนินการลบกลุ่มสินค้า
+
   const handleDeleteGroup = async () => {
     if (!groupToDelete) return;
     
@@ -149,11 +144,9 @@ export default function ProductList() {
         const data = await response.json();
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการลบกลุ่มสินค้า');
       }
-      
-      // แสดงข้อความสำเร็จ
+
       setSuccess('ลบกลุ่มสินค้าและสินค้าทั้งหมดสำเร็จ');
-      
-      // โหลดข้อมูลกลุ่มสินค้าใหม่
+
       const queryParams = new URLSearchParams({
         page: pagination.page.toString(),
         limit: pagination.limit.toString(),
@@ -167,19 +160,17 @@ export default function ProductList() {
       const data = await fetchResponse.json();
       setGroups(data.data);
       setPagination(data.pagination);
-      
-      // ลบข้อความสำเร็จหลัง 3 วินาที
+
       setTimeout(() => {
         setSuccess(null);
-      }, 3000);
+      }, 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบกลุ่มสินค้า');
     } finally {
       closeDeleteDialog();
     }
   };
-  
-  // ฟังก์ชันแปลงวันที่ให้อยู่ในรูปแบบไทย
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('th-TH', {
@@ -188,19 +179,16 @@ export default function ProductList() {
       day: 'numeric',
     });
   };
-  
-  // สร้างตัวเลือกสำหรับ pagination
+
   const renderPagination = () => {
     const pages = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, pagination.page - Math.floor(maxVisiblePages / 2));
-    
-    // ปรับ startPage ถ้า endPage ใกล้สุดท้าย
+
     if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) - maxVisiblePages + 1);
     }
-    
-    // ปุ่มย้อนกลับ
+
     pages.push(
       <button
         key="prev"
@@ -211,8 +199,7 @@ export default function ProductList() {
         &laquo;
       </button>
     );
-    
-    // หน้าแรก (ถ้าไม่ได้แสดงอยู่แล้ว)
+
     if (startPage > 1) {
       pages.push(
         <button
@@ -225,8 +212,7 @@ export default function ProductList() {
           1
         </button>
       );
-      
-      // แสดงจุดไข่ปลาถ้ามีช่องว่างระหว่างหน้าแรกกับหน้าถัดไป
+
       if (startPage > 2) {
         pages.push(
           <span key="dots1" className="px-3 py-1">
@@ -235,8 +221,7 @@ export default function ProductList() {
         );
       }
     }
-    
-    // หน้าในช่วงที่ต้องการแสดง
+
     for (let i = startPage; i <= Math.min(pagination.totalPages, startPage + maxVisiblePages - 1); i++) {
       pages.push(
         <button
@@ -250,10 +235,8 @@ export default function ProductList() {
         </button>
       );
     }
-    
-    // หน้าสุดท้าย (ถ้าไม่ได้แสดงอยู่แล้ว)
+
     if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) < pagination.totalPages) {
-      // แสดงจุดไข่ปลาถ้ามีช่องว่างระหว่างหน้าสุดท้ายที่แสดงกับหน้าสุดท้ายจริง
       if (Math.min(pagination.totalPages, startPage + maxVisiblePages - 1) < pagination.totalPages - 1) {
         pages.push(
           <span key="dots2" className="px-3 py-1">
@@ -274,8 +257,7 @@ export default function ProductList() {
         </button>
       );
     }
-    
-    // ปุ่มไปข้างหน้า
+
     pages.push(
       <button
         key="next"
@@ -300,6 +282,21 @@ export default function ProductList() {
     );
   }
   
+  const getGroupFlashSaleStatus = (group: GroupProduct) => {
+    // ตรวจสอบว่ามีสินค้าใดในกลุ่มที่มี Flash Sale ที่กำลังดำเนินการ (active) หรือกำลังจะเริ่ม (pending) หรือไม่
+    const activeFlashSale = group.products.find(product => 
+      product.flash_sale && (product.flash_sale.status === 'active' || product.flash_sale.status === 'pending')
+    );
+    
+    if (activeFlashSale?.flash_sale?.status === 'active') {
+      return 'active';
+    } else if (activeFlashSale?.flash_sale?.status === 'pending') {
+      return 'pending';
+    }
+    
+    return null;
+  };
+
   return (
     <DashboardLayout>
       <div className="container mx-auto p-6">
@@ -324,8 +321,7 @@ export default function ProductList() {
             {success}
           </div>
         )}
-        
-        {/* ส่วนค้นหาและกรอง */}
+
         <div className="bg-white p-4 rounded shadow mb-6">
           <form onSubmit={handleSearch} className="flex flex-wrap gap-4 items-end">
             <div className="flex-grow">
@@ -394,6 +390,7 @@ export default function ProductList() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อกลุ่มสินค้า</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">คำอธิบาย</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จำนวนสินค้า</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Flash Sale</th> {/* เพิ่มคอลัมน์นี้ */}
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">วันที่สร้าง</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จัดการ</th>
               </tr>
@@ -433,6 +430,28 @@ export default function ProductList() {
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
+                      {(() => {
+                        const flashSaleStatus = getGroupFlashSaleStatus(group);
+                        if (flashSaleStatus === 'active') {
+                          return (
+                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                              กำลังดำเนินการ
+                            </span>
+                          );
+                        } else if (flashSaleStatus === 'pending') {
+                          return (
+                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                              กำลังจะเริ่ม
+                            </span>
+                          );
+                        } else {
+                          return (
+                            <span className="text-gray-500">-</span>
+                          );
+                        }
+                      })()}
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
                       {formatDate(group.create_Date)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -455,13 +474,13 @@ export default function ProductList() {
                 ))
               ) : loading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     กำลังโหลดข้อมูล...
                   </td>
                 </tr>
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     ไม่พบกลุ่มสินค้า {search && `สำหรับคำค้น "${search}"`}
                   </td>
                 </tr>
