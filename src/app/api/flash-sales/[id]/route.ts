@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function calculateFlashSaleStatus(startDate: Date, endDate: Date, quantity: number, currentStatus?: string): string {
   const now = new Date();
   

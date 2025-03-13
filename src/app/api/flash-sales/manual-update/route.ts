@@ -3,7 +3,7 @@ import { runFlashSaleUpdates } from "@/lib/cronService";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

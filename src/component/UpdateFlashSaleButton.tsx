@@ -4,7 +4,20 @@ import React, { useState } from 'react';
 
 export default function UpdateFlashSaleButton() {
   const [isUpdating, setIsUpdating] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<{
+    statusResult: {
+      total: number;
+      pendingToActive: number;
+      activeToExpired: number;
+      noChange: number;
+      errors: number;
+    };
+    soldOutResult: {
+      total: number;
+      updatedToSoldOut: number;
+      errors: number;
+    };
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleUpdate = async () => {
