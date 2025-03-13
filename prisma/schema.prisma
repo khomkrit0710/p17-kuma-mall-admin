@@ -47,6 +47,7 @@ model group_product {
   uuid                String            @default(uuid())
   create_Date         DateTime          @default(now())
   group_name          String            @db.Text @default("")
+  subname             String            @db.Text @default("")
   main_img_url        String[]          @default([]) 
   description         String            @db.Text @default("")
   
@@ -61,7 +62,8 @@ model category {
   create_Date     DateTime    @default(now())
   name            String      @unique
   description     String?     @db.Text
-  
+  img_url         String?
+
   groups          group_to_category[]
 }
 
@@ -71,6 +73,7 @@ model collection {
   create_Date     DateTime    @default(now())
   name            String      @unique
   description     String?     @db.Text
+  img_url         String?
   
   groups          group_to_collection[]
 }

@@ -1,4 +1,3 @@
-// src/app/layout.tsx (อัปเดต)
 import type { Metadata } from "next";
 import "./globals.css";
 import AuthProvider from "@/component/SessionProvider";

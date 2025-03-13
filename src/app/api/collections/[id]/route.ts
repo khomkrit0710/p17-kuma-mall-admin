@@ -54,7 +54,6 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-
     const session = await getServerSession(authOptions);
 
     if (!session?.user) {
@@ -84,7 +83,7 @@ export async function PUT(
       );
     }
 
-    const { name, description = "" } = await request.json();
+    const { name, description = "", img_url = null } = await request.json();
 
     if (!name) {
       return NextResponse.json(
@@ -111,7 +110,8 @@ export async function PUT(
       where: { id: collectionId },
       data: {
         name,
-        description
+        description,
+        img_url
       }
     });
 

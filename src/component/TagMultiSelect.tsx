@@ -1,4 +1,3 @@
-// src/component/TagMultiSelect.tsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -17,6 +16,8 @@ type TagMultiSelectProps = {
   label?: string;
   id?: string;
   className?: string;
+  showEmptyOption?: boolean;
+  emptyOptionLabel?: string; 
 };
 
 const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
@@ -26,14 +27,15 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   placeholder = 'เลือก...',
   label,
   id,
-  className = ''
+  className = '',
+  showEmptyOption = false,
+  emptyOptionLabel = 'ไม่มีหมวดหมู่'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // คลิกที่อื่นนอกจาก dropdown จะปิด dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -48,7 +50,6 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
     };
   }, []);
 
-  // คลิกที่ dropdown จะเปิด และ focus ที่ input
   const handleDropdownClick = () => {
     setIsOpen(!isOpen);
     if (!isOpen && inputRef.current) {
@@ -58,34 +59,52 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
     }
   };
 
-  // สลับการเลือก/ยกเลิกการเลือกตัวเลือก
   const toggleOption = (optionId: string) => {
     const newSelectedValues = [...selectedValues];
     
+    if (optionId === '0' && showEmptyOption) {
+      onChange(['0']);
+      setIsOpen(false);
+      return;
+    }
+
+    if (newSelectedValues.includes('0') && optionId !== '0') {
+      newSelectedValues.splice(newSelectedValues.indexOf('0'), 1);
+    }
+    
     if (newSelectedValues.includes(optionId)) {
-      // ถ้ามีอยู่แล้ว ให้ลบออก
       onChange(newSelectedValues.filter(id => id !== optionId));
     } else {
-      // ถ้ายังไม่มี ให้เพิ่มเข้าไป
       onChange([...newSelectedValues, optionId]);
     }
+    
+    setIsOpen(false);
   };
 
-  // ลบตัวเลือกที่เลือกไว้
   const removeOption = (optionId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // ป้องกันการเปิด dropdown
+    e.stopPropagation();
     onChange(selectedValues.filter(id => id !== optionId));
   };
 
-  // ดึงข้อมูลตัวเลือกที่เลือกไว้
   const getSelectedOptions = () => {
-    return options.filter(option => selectedValues.includes(String(option.id)));
+    let selected = [...options.filter(option => selectedValues.includes(String(option.id)))];
+
+    if (showEmptyOption && selectedValues.includes('0')) {
+      selected = [{ id: '0', name: emptyOptionLabel }, ...selected];
+    }
+    
+    return selected;
   };
 
-  // กรองตัวเลือกตามคำค้นหา
-  const filteredOptions = options.filter(option => 
+  let filteredOptions = options.filter(option => 
     option.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (showEmptyOption) {
+    if (!searchTerm || emptyOptionLabel.toLowerCase().includes(searchTerm.toLowerCase())) {
+      filteredOptions = [{ id: '0', name: emptyOptionLabel }, ...filteredOptions];
+    }
+  }
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>

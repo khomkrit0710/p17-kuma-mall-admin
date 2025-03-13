@@ -175,7 +175,8 @@ export async function PUT(
     }
 
     const { 
-      group_name, 
+      group_name,
+      subname = "",
       description = "", 
       main_img_url = [],
       categories = [],
@@ -194,6 +195,7 @@ export async function PUT(
         where: { id: groupId },
         data: {
           group_name,
+          subname,
           description,
           main_img_url
         }

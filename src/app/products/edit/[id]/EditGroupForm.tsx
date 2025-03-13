@@ -14,10 +14,12 @@ export default function EditGroupForm({ id }: { id: string }) {
   const [groupData, setGroupData] = useState<GroupProductData | null>(null);
   const [editedGroupData, setEditedGroupData] = useState<{
     group_name: string;
+    subname: string;
     description: string;
     main_img_url: string[];
   }>({
     group_name: '',
+    subname: '',
     description: '',
     main_img_url: []
   });
@@ -71,6 +73,7 @@ export default function EditGroupForm({ id }: { id: string }) {
 
         setEditedGroupData({
           group_name: data.group_name,
+          subname: data.subname || '',
           description: data.description || '',
           main_img_url: Array.isArray(data.main_img_url) ? data.main_img_url : []
         });
@@ -78,13 +81,13 @@ export default function EditGroupForm({ id }: { id: string }) {
         if (data.categories && Array.isArray(data.categories)) {
           setGroupCategories(data.categories.map((cat: { id: { toString: () => string } }): string => cat.id.toString()));
         } else {
-          setGroupCategories([]);
+          setGroupCategories(["0"]);
         }
         
         if (data.collections && Array.isArray(data.collections)) {
           setGroupCollections(data.collections.map((col: { id: { toString: () => string } }): string => col.id.toString()));
         } else {
-          setGroupCollections([]);
+          setGroupCollections(["0"]);
         }
 
         if (data.products && Array.isArray(data.products)) {
@@ -117,7 +120,7 @@ export default function EditGroupForm({ id }: { id: string }) {
     };
     
     fetchGroupData();
-  }, [groupId, status]);
+  }, [groupId, status, router]);
 
   useEffect(() => {
     const fetchCategories = async () => {

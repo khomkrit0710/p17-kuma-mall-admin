@@ -1,4 +1,3 @@
-// page.tsx (Server Component)
 import { Suspense } from 'react';
 import EditGroupForm from './EditGroupForm';
 

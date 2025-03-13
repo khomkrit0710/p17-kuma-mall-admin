@@ -143,6 +143,7 @@ export async function POST(request: Request) {
 
     const { 
       group_name, 
+      subname = "",
       description = "", 
       main_img_url = [],
       categories = [],
@@ -160,6 +161,7 @@ export async function POST(request: Request) {
       const newGroup = await tx.group_product.create({
         data: {
           group_name,
+          subname,
           description,
           main_img_url,
         }

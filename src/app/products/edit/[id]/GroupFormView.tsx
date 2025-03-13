@@ -13,6 +13,7 @@ type GroupFormViewProps = {
   groupData: GroupProductData | null;
   editedGroupData: {
     group_name: string;
+    subname: string;
     description: string;
     main_img_url: string[];
   };
@@ -135,7 +136,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
       {/* ส่วนข้อมูลกลุ่มสินค้า */}
       <div className="bg-white p-6 rounded shadow-md mb-8">
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-xl font-semibold">ข้อมูลกลุ่มสินค้า</h2>
+          <h2 className="text-xl font-semibold">ข้อมูลสินค้า</h2>
           <div className="space-x-2">
             {isEditingGroup ? (
               <>
@@ -189,10 +190,22 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 required
               />
             </div>
-            
+            <div>
+              <label htmlFor="subname" className="block text-sm font-medium text-gray-700 mb-1">
+                ชื่อรอง
+              </label>
+              <input
+                type="text"
+                id="subname"
+                name="subname"
+                value={editedGroupData.subname}
+                onChange={handleGroupChange}
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+            </div>
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                คำอธิบายกลุ่มสินค้า
+                คำอธิบายสินค้า
               </label>
               <textarea
                 id="description"
@@ -251,19 +264,17 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
               )}
             </div>
 
-            {/* หมวดหมู่ของกลุ่ม */}
             <div className="mb-4">
               <TagMultiSelect
                 id="group-categories"
-                label="หมวดหมู่ของกลุ่ม"
+                label="หมวดหมู่"
                 options={categories}
                 selectedValues={groupCategories}
                 onChange={(selectedValues) => setGroupCategories(selectedValues)}
                 placeholder="เลือกหมวดหมู่..."
+                showEmptyOption={true}
+                emptyOptionLabel="ไม่มีหมวดหมู่"
               />
-              <p className="text-sm text-gray-500 mt-1">
-                หมวดหมู่ที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าทั้งหมดในกลุ่มนี้
-              </p>
             </div>
             
             {/* คอลเลคชันของกลุ่ม */}
@@ -275,10 +286,9 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 selectedValues={groupCollections}
                 onChange={(selectedValues) => setGroupCollections(selectedValues)}
                 placeholder="เลือกคอลเลคชัน..."
+                showEmptyOption={true}
+                emptyOptionLabel="ไม่มีคอลเลคชัน"
               />
-              <p className="text-sm text-gray-500 mt-1">
-                คอลเลคชันที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าทั้งหมดในกลุ่มนี้
-              </p>
             </div>
           </div>
         ) : (
@@ -307,7 +317,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
               </div>
 
               {/* แสดงหมวดหมู่ของกลุ่ม */}
-              {groupData.categories && Array.isArray(groupData.categories) && groupData.categories.length > 0 && (
+              {groupData.categories && Array.isArray(groupData.categories) && groupData.categories.length > 0 ? (
                 <div className="mt-4">
                   <span className="text-sm text-gray-500 block mb-2">หมวดหมู่ของกลุ่ม:</span>
                   <div className="flex flex-wrap gap-1">
@@ -320,6 +330,11 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       </span>
                     ))}
                   </div>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <span className="text-sm text-gray-500 block mb-2">หมวดหมู่ของกลุ่ม:</span>
+                  <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">ไม่มีหมวดหมู่</span>
                 </div>
               )}
 

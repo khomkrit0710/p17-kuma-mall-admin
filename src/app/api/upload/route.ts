@@ -3,11 +3,10 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { v4 as uuidv4 } from "uuid"; 
 import { existsSync } from "fs";
 
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,7 +46,10 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     const originalName = file.name;
     const fileExtension = originalName.split('.').pop();
-    const fileName = `${uuidv4()}.${fileExtension}`;
+    const timestamp = Date.now();
+    const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const fileName = `${timestamp}${randomNum}.${fileExtension}`;
+    
     const uploadDir = join(process.cwd(), 'public/uploads');
     if (!existsSync(uploadDir)) {
       try {

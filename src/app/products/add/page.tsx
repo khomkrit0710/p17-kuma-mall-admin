@@ -39,12 +39,14 @@ export default function AddProductPage() {
   const [currentStep, setCurrentStep] = useState<'group' | 'products'>('group');
   const [groupData, setGroupData] = useState<{
     group_name: string;
+    subname: string;
     description: string;
     main_img_url: string[];
     categories: string[];
     collections: string[];
   }>({
     group_name: '',
+    subname: '',
     description: '',
     main_img_url: [],
     categories: [],
@@ -71,8 +73,8 @@ export default function AddProductPage() {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [uploading, setUploading] = useState(false);
   const [mainImagePreview, setMainImagePreview] = useState<string[]>([]);
-  const [groupCategories, setGroupCategories] = useState<string[]>([]);
-  const [groupCollections, setGroupCollections] = useState<string[]>([]);
+const [groupCategories, setGroupCategories] = useState<string[]>(["0"]);
+const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -115,14 +117,12 @@ export default function AddProductPage() {
       [name]: value
     });
   };
-  
-  // จัดการการเปลี่ยนแปลงข้อมูลสินค้า
+
   const handleProductChange = (index: number, e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
     const updatedProducts = [...productsList];
-    
-    // จัดการกับค่าตัวเลข
+
     if (name === 'product_width') {
       updatedProducts[index].product_width = value === '' ? null : Number(value);
     } else if (name === 'product_length') {
@@ -138,7 +138,6 @@ export default function AddProductPage() {
     } else if (name === 'price_origin') {
       updatedProducts[index].price_origin = Number(value);
     } else {
-      // สำหรับข้อมูลประเภทอื่นๆ (string)
       updatedProducts[index] = {
         ...updatedProducts[index],
         [name]: value
@@ -167,8 +166,7 @@ export default function AddProductPage() {
       }
     ]);
   };
-  
-  // ลบสินค้าออกจากรายการ
+
   const removeProduct = (index: number) => {
     if (productsList.length === 1) {
       setError('ต้องมีสินค้าอย่างน้อย 1 รายการ');
@@ -179,8 +177,7 @@ export default function AddProductPage() {
     updatedProducts.splice(index, 1);
     setProductsList(updatedProducts);
   };
-  
-  // อัปโหลดรูปภาพหลักของกลุ่มสินค้า
+
   const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -201,15 +198,13 @@ export default function AddProductPage() {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
       }
-      
-      // เพิ่ม URL รูปภาพใหม่เข้าไปในอาร์เรย์
+
       const newImageUrl = data.url;
       setGroupData({
         ...groupData,
         main_img_url: [...groupData.main_img_url, newImageUrl]
       });
-      
-      // เพิ่มตัวอย่างรูปภาพ
+
       setMainImagePreview([...mainImagePreview, newImageUrl]);
       
     } catch (error) {
@@ -218,8 +213,7 @@ export default function AddProductPage() {
       setUploading(false);
     }
   };
-  
-  // อัปโหลดรูปภาพสินค้า
+
   const handleProductImageUpload = async (productIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -240,8 +234,7 @@ export default function AddProductPage() {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
       }
-      
-      // อัปเดตรูปภาพของสินค้า
+
       const updatedProducts = [...productsList];
       updatedProducts[productIndex].img_url = data.url;
       setProductsList(updatedProducts);
@@ -252,8 +245,7 @@ export default function AddProductPage() {
       setUploading(false);
     }
   };
-  
-  // ลบรูปภาพหลักของกลุ่มสินค้า
+
   const removeMainImage = (index: number) => {
     const updatedImages = [...groupData.main_img_url];
     updatedImages.splice(index, 1);
@@ -267,10 +259,9 @@ export default function AddProductPage() {
     updatedPreviews.splice(index, 1);
     setMainImagePreview(updatedPreviews);
   };
-  
-  // ไปยังขั้นตอนเพิ่มสินค้า
+
   const handleContinueToProducts = () => {
-    // ตรวจสอบข้อมูลที่จำเป็น
+
     if (!groupData.group_name.trim()) {
       setError('กรุณาระบุชื่อกลุ่มสินค้า');
       return;
@@ -279,32 +270,28 @@ export default function AddProductPage() {
     setError('');
     setCurrentStep('products');
   };
-  
-  // กลับไปแก้ไขข้อมูลกลุ่มสินค้า
+
   const goBackToGroupEdit = () => {
     setCurrentStep('group');
   };
-  
-  // ยกเลิกการสร้างกลุ่มสินค้า
+
   const cancelGroupCreation = () => {
     if (confirm('คุณต้องการยกเลิกการสร้างกลุ่มสินค้าใช่หรือไม่?')) {
       router.push('/products/list');
     }
   };
 
-  // บันทึกข้อมูลทั้งหมด (กลุ่มสินค้าและสินค้า)
   const handleSubmitAll = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
     
     try {
-      // 1. ตรวจสอบข้อมูลกลุ่มสินค้า
+
       if (!groupData.group_name.trim()) {
         throw new Error('กรุณาระบุชื่อกลุ่มสินค้า');
       }
-      
-      // 2. ตรวจสอบข้อมูลสินค้า
+
       for (let i = 0; i < productsList.length; i++) {
         const product = productsList[i];
         if (!product.sku.trim()) {
@@ -317,8 +304,7 @@ export default function AddProductPage() {
           throw new Error(`กรุณาระบุราคาขายของสินค้าลำดับที่ ${i + 1}`);
         }
       }
-      
-      // 3. สร้างกลุ่มสินค้า
+
       const groupPostData = {
         ...groupData,
         categories: groupCategories,
@@ -340,14 +326,12 @@ export default function AddProductPage() {
       
       const groupResult = await groupResponse.json();
       const createdGroupId = groupResult.data.id;
-      
-      // 4. เพิ่ม group_id เข้าไปในข้อมูลสินค้า
+
       const productsWithGroup = productsList.map(product => ({
         ...product,
         group_id: createdGroupId
       }));
-      
-      // 5. เพิ่มสินค้าในกลุ่ม
+
       const productsResponse = await fetch('/api/products/batch', {
         method: 'POST',
         headers: {
@@ -365,8 +349,7 @@ export default function AddProductPage() {
       }
       
       setSuccess('เพิ่มกลุ่มสินค้าและสินค้าสำเร็จ');
-      
-      // รอสักครู่แล้วเปลี่ยนเส้นทางไปหน้ารายการสินค้า
+
       setTimeout(() => {
         router.push('/products/list');
       }, 1500);
@@ -420,12 +403,12 @@ export default function AddProductPage() {
         {/* ส่วนสร้างกลุ่มสินค้า */}
         {currentStep === 'group' && (
           <div className="bg-white p-6 rounded shadow-md">
-            <h2 className="text-xl font-semibold mb-4">ข้อมูลกลุ่มสินค้า</h2>
+            <h2 className="text-xl font-semibold mb-4">ข้อมูลสินค้า</h2>
             
             <div className="space-y-4">
               <div>
                 <label htmlFor="group_name" className="block text-sm font-medium text-gray-700 mb-1">
-                  ชื่อกลุ่มสินค้า <span className="text-red-500">*</span>
+                  ชื่อสินค้าหลัก <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -437,10 +420,22 @@ export default function AddProductPage() {
                   required
                 />
               </div>
-              
+              <div>
+                <label htmlFor="subname" className="block text-sm font-medium text-gray-700 mb-1">
+                  ชื่อรอง
+                </label>
+                <input
+                  type="text"
+                  id="subname"
+                  name="subname"
+                  value={groupData.subname}
+                  onChange={handleGroupChange}
+                  className="w-full p-2 border border-gray-300 rounded"
+                />
+              </div>
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  คำอธิบายกลุ่มสินค้า
+                  คำอธิบายสินค้า
                 </label>
                 <textarea
                   id="description"
@@ -466,13 +461,11 @@ export default function AddProductPage() {
                     });
                   }}
                   placeholder="เลือกหมวดหมู่..."
+                  showEmptyOption={true}
+                  emptyOptionLabel="ไม่มีหมวดหมู่"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  หมวดหมู่ที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าทั้งหมดในกลุ่มนี้
-                </p>
               </div>
-              
-              {/* ส่วนเลือกคอลเลคชันสำหรับกลุ่มสินค้า */}
+
               <div>
                 <TagMultiSelect
                   id="group-collections"
@@ -487,15 +480,14 @@ export default function AddProductPage() {
                     });
                   }}
                   placeholder="เลือกคอลเลคชัน..."
+                  showEmptyOption={true}
+                  emptyOptionLabel="ไม่มีคอลเลคชัน"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  คอลเลคชันที่เลือกจะใช้เป็นค่าเริ่มต้นสำหรับสินค้าทั้งหมดในกลุ่มนี้
-                </p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  รูปภาพหลักของกลุ่มสินค้า
+                  รูปภาพหลักสินค้า
                 </label>
                 <input
                   type="file"
@@ -556,18 +548,17 @@ export default function AddProductPage() {
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
                 disabled={uploading}
               >
-                ถัดไป: เพิ่มสินค้า
+                ถัดไป: เพิ่มรายการสินค้า
               </button>
             </div>
           </div>
         )}
         
-        {/* ส่วนเพิ่มสินค้า */}
         {currentStep === 'products' && (
           <div>
             <div className="bg-blue-50 p-4 rounded border border-blue-200 mb-6">
-              <h2 className="text-lg font-semibold mb-2">ข้อมูลกลุ่มสินค้า:</h2>
-              <p><strong>ชื่อกลุ่ม:</strong> {groupData.group_name}</p>
+              <h2 className="text-lg font-semibold mb-2">ข้อมูลสินค้า:</h2>
+              <p><strong>ชื่อสินค้า:</strong> {groupData.group_name}</p>
               {groupData.description && (
                 <p><strong>คำอธิบาย:</strong> <span className="whitespace-pre-line">{groupData.description}</span></p>
               )}
@@ -583,12 +574,12 @@ export default function AddProductPage() {
             </div>
             
             <form onSubmit={handleSubmitAll} className="bg-white p-6 rounded shadow-md">
-              <h2 className="text-xl font-semibold mb-4">เพิ่มสินค้าในกลุ่ม</h2>
+              <h2 className="text-xl font-semibold mb-4">เพิ่มตัวเลือก</h2>
               
               {productsList.map((product, index) => (
                 <div key={index} className="mb-8 pb-6 border-b border-gray-200">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-medium">สินค้าที่ {index + 1}</h3>
+                    <h3 className="text-lg font-medium">ตัวเลือกที่ {index + 1}</h3>
                     {productsList.length > 1 && (
                       <button
                         type="button"
@@ -620,7 +611,7 @@ export default function AddProductPage() {
                       
                       <div>
                         <label htmlFor={`name_sku-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                          ชื่อสินค้า <span className="text-red-500">*</span>
+                          ชื่อตัวเลือกสินค้า <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -651,7 +642,7 @@ export default function AddProductPage() {
                       
                       <div>
                         <label htmlFor={`make_price-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                          ต้นทุน
+                          ราคาเต็ม
                         </label>
                         <input
                           type="number"

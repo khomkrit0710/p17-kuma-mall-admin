@@ -11,6 +11,7 @@ type GroupProduct = {
   id: number;
   uuid: string;
   group_name: string;
+  subname: string;
   description: string;
   main_img_url: string[];
   create_Date: string;
@@ -283,7 +284,6 @@ export default function ProductList() {
   }
   
   const getGroupFlashSaleStatus = (group: GroupProduct) => {
-    // ตรวจสอบว่ามีสินค้าใดในกลุ่มที่มี Flash Sale ที่กำลังดำเนินการ (active) หรือกำลังจะเริ่ม (pending) หรือไม่
     const activeFlashSale = group.products.find(product => 
       product.flash_sale && (product.flash_sale.status === 'active' || product.flash_sale.status === 'pending')
     );
@@ -412,6 +412,12 @@ export default function ProductList() {
                         <div className="w-12 h-12 bg-gray-200 flex items-center justify-center rounded border">
                           <span className="text-gray-400 text-xs">ไม่มีรูป</span>
                         </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900">{group.group_name}</div>
+                      {group.subname && (
+                        <div className="text-sm text-gray-500">{group.subname}</div>
                       )}
                     </td>
                     <td className="px-4 py-3">

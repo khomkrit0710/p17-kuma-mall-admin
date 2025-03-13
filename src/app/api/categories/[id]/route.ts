@@ -81,7 +81,7 @@ export async function PUT(
       );
     }
 
-    const { name, description = "" } = await request.json();
+    const { name, description = "", img_url } = await request.json();
 
     if (!name) {
       return NextResponse.json(
@@ -108,7 +108,8 @@ export async function PUT(
       where: { id: categoryId },
       data: {
         name,
-        description
+        description,
+        img_url
       }
     });
 

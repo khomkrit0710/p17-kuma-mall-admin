@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, description = "" } = await request.json();
+    const { name, description = "", img_url = null } = await request.json();
 
     if (!name) {
       return NextResponse.json(
@@ -73,6 +73,7 @@ export async function POST(request: Request) {
       data: {
         name,
         description,
+        img_url,
       },
     });
 
