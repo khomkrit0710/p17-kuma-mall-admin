@@ -75,7 +75,7 @@ export default function CollectionsPage() {
     //<<-------------------handle------------------->>
   const handleAddCollection = () => {
     if (totalCollections >= 10) { 
-      setError('ไม่สามารถเพิ่มคอลเลคชันได้อีก เนื่องจากมีจำนวนคอลเลคชันสูงสุดแล้ว (10 รายการ)');
+      setError('ไม่สามารถเพิ่มคอลเลคชันได้อีก เนื่องจากมีจำนวนคอลเลคชันสูงสุดแล้ว (11 รายการ)');
       return;
     }
     setFormData({ id: 0, name: '', description: '', img_url: '' });
@@ -195,7 +195,7 @@ export default function CollectionsPage() {
 
       setTimeout(() => {
         setSuccess(null);
-      }, 2000);
+      }, 1000);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกคอลเลคชัน');
@@ -229,13 +229,13 @@ export default function CollectionsPage() {
 
       setTimeout(() => {
         setSuccess(null);
-      }, 2000);
+      }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบคอลเลคชัน');
 
       setTimeout(() => {
         setError(null);
-      }, 2000);
+      }, 1000);
     }
   };
 
@@ -247,7 +247,7 @@ export default function CollectionsPage() {
           <button
             onClick={handleAddCollection}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
-            disabled={totalCollections >= 10} 
+            disabled={totalCollections >= 11} 
           >
             เพิ่มคอลเลคชัน
           </button>
@@ -266,7 +266,7 @@ export default function CollectionsPage() {
         )}
 
         <div className="mb-4 text-gray-600">
-          จำนวนคอลเลคชันทั้งหมด: <span className="font-medium">{totalCollections}</span> / <span className="font-medium">10</span> รายการ
+          จำนวนคอลเลคชันทั้งหมด: <span className="font-medium">{totalCollections}</span> / <span className="font-medium">11</span> รายการ
         </div>
 
         {showForm && (

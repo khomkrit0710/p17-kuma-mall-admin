@@ -28,14 +28,13 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [uploading, setUploading] = useState<number | null>(null);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
-  // โหลดข้อมูลเมื่อคอมโพเนนท์ถูกสร้าง หรือเมื่อมีการระบุ initialDescription
   useEffect(() => {
     if (initialDescription) {
       const { text_des, img_url_des } = initialDescription;
       const newSections: DescriptionSection[] = [];
-      
-      // จัดการกรณีที่ arrays มีขนาดไม่เท่ากัน
+
       const maxLength = Math.max(text_des.length, img_url_des.length);
       
       for (let i = 0; i < maxLength; i++) {
@@ -44,8 +43,7 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
           img_url: img_url_des[i] || ''
         });
       }
-      
-      // ถ้าไม่มีข้อมูลเลย ให้เพิ่มส่วนว่างหนึ่งส่วน
+
       if (newSections.length === 0) {
         newSections.push({ text: '', img_url: '' });
       }
@@ -56,7 +54,6 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
     }
   }, [initialDescription, groupId]);
 
-  // ดึงข้อมูลคำอธิบายจาก API
   const fetchDescription = async () => {
     if (!groupId) return;
     
@@ -118,7 +115,6 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
     setSections(newSections);
   };
 
-  // อัปโหลดรูปภาพ
   const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -151,14 +147,12 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
     }
   };
 
-  // ลบรูปภาพ
   const removeImage = (index: number) => {
     const newSections = [...sections];
     newSections[index].img_url = '';
     setSections(newSections);
   };
 
-  // บันทึกข้อมูลคำอธิบายทั้งหมด
   const saveDescription = async () => {
     if (!groupId) return;
     
@@ -167,7 +161,6 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
     setSuccess(null);
     
     try {
-      // แยกข้อมูลเป็น arrays
       const text_des = sections.map(section => section.text);
       const img_url_des = sections.map(section => section.img_url);
       
@@ -192,7 +185,7 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
       
       setTimeout(() => {
         setSuccess(null);
-      }, 3000);
+      }, 1000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึกคำอธิบาย');
     } finally {
@@ -200,13 +193,84 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
     }
   };
 
+  const toggleFullDescription = () => {
+    setShowFullDescription(!showFullDescription);
+  };
+
+  const renderFullDescription = () => {
+    return (
+      <div className="bg-white rounded shadow p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">คำอธิบายสินค้า (แบบเต็ม)</h2>
+          <button
+            type="button"
+            onClick={toggleFullDescription}
+            className="text-blue-600 hover:text-blue-800 text-sm underline"
+          >
+            กลับไปแบบแก้ไขได้
+          </button>
+        </div>
+
+        <div 
+          className="border rounded p-4 bg-gray-50 whitespace-pre-line cursor-pointer"
+          onClick={toggleFullDescription}
+        >
+          {sections.length === 0 ? (
+            <p className="text-gray-500">ไม่มีข้อมูลคำอธิบาย</p>
+          ) : (
+            <>
+              {sections.map((section, index) => (
+                <React.Fragment key={index}>
+                  {section.text && <div className="mb-4">{section.text}</div>}
+                  
+                  {section.img_url && (
+                    <div className="my-4">
+                      <Image
+                        src={section.img_url}
+                        alt={`รูปภาพประกอบส่วนที่ ${index + 1}`}
+                        width={400}
+                        height={400}
+                        className="object-contain border rounded mx-auto"
+                      />
+                    </div>
+                  )}
+                  
+                  {index < sections.length - 1 && section.text && <hr className="my-4" />}
+                </React.Fragment>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return <div className="p-4 text-center">กำลังโหลดข้อมูลคำอธิบาย...</div>;
   }
 
+  if (showFullDescription) {
+    return renderFullDescription();
+  }
+
   return (
     <div className="bg-white p-6 rounded shadow-md">
-      <h2 className="text-xl font-semibold mb-4">คำอธิบายสินค้า</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">คำอธิบายสินค้า</h2>
+        
+        {/* ปุ่มดูคำอธิบายทั้งหมด */}
+        {!readOnly && (
+          <div className="flex space-x-2">
+            <button
+              type="button" 
+              onClick={toggleFullDescription}
+              className="text-blue-600 hover:text-blue-800 text-sm underline"
+            >
+              ดูคำอธิบายทั้งหมด
+            </button>
+          </div>
+        )}
+      </div>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">

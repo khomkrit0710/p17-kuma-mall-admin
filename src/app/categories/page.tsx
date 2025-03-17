@@ -72,8 +72,8 @@ export default function CategoriesPage() {
   
     //<<-------------------handle------------------->>
   const handleAddCategory = () => {
-    if (totalCategories >= 10) {
-      setError('ไม่สามารถเพิ่มหมวดหมู่ได้อีก เนื่องจากมีจำนวนหมวดหมู่สูงสุดแล้ว (10 รายการ)');
+    if (totalCategories >= 11) {
+      setError('ไม่สามารถเพิ่มหมวดหมู่ได้อีก เนื่องจากมีจำนวนหมวดหมู่สูงสุดแล้ว (11 รายการ)');
       return;
     }
     setFormData({ id: 0, name: '', description: '', img_url: '' });
@@ -192,7 +192,7 @@ export default function CategoriesPage() {
 
       setTimeout(() => {
         setSuccess(null);
-      }, 2000);
+      }, 1000);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกหมวดหมู่');
@@ -226,13 +226,13 @@ export default function CategoriesPage() {
 
       setTimeout(() => {
         setSuccess(null);
-      }, 2000);
+      }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบหมวดหมู่');
 
       setTimeout(() => {
         setError(null);
-      }, 2000);
+      }, 1000);
     }
   };
 
@@ -254,7 +254,7 @@ export default function CategoriesPage() {
           <button
             onClick={handleAddCategory}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
-            disabled={totalCategories >= 10}
+            disabled={totalCategories >= 11}
           >
             เพิ่มหมวดหมู่
           </button>
@@ -273,7 +273,7 @@ export default function CategoriesPage() {
         )}
 
         <div className="mb-4 text-gray-600">
-          จำนวนหมวดหมู่ทั้งหมด: <span className="font-medium">{totalCategories}</span> / <span className="font-medium">10</span> รายการ
+          จำนวนหมวดหมู่ทั้งหมด: <span className="font-medium">{totalCategories}</span> / <span className="font-medium">11</span> รายการ
         </div>
 
         {showForm && (

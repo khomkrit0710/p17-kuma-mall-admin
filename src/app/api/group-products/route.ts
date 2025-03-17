@@ -25,11 +25,11 @@ export async function GET(request: Request) {
     ? {
         OR: [
           { group_name: { contains: search } },
-          { description: { contains: search } },
+          { subname: { contains: search } },
         ],
       }
     : {};
-    
+
     const groups = await prisma.group_product.findMany({
       where: whereCondition,
       include: {
@@ -40,14 +40,15 @@ export async function GET(request: Request) {
                 id: true,
                 name_sku: true,
                 sku: true,
-                img_url: true,
                 price_origin: true,
                 quantity: true,
+                img_product: true,
               },
             },
           },
           take: 5,
         },
+        img_group_product: true, 
       },
       orderBy: {
         create_Date: "desc",
@@ -91,7 +92,7 @@ export async function GET(request: Request) {
           id: product.id,
           sku: product.sku,
           name_sku: product.name_sku,
-          img_url: product.img_url,
+          img_url: product.img_product?.img_url || null,
           price_origin: product.price_origin,
           quantity: product.quantity,
           flash_sale: flashSale
@@ -100,16 +101,24 @@ export async function GET(request: Request) {
       
       const hasFlashSale = flashSales.length > 0;
       
+      let groupImageUrl = null;
+      if (group.img_group_product && 
+          group.img_group_product.img_url && 
+          Array.isArray(group.img_group_product.img_url) && 
+          group.img_group_product.img_url.length > 0) {
+        groupImageUrl = group.img_group_product.img_url[0];
+      }
+      
       return {
         id: group.id,
         uuid: group.uuid,
         group_name: group.group_name,
-        description: group.description,
-        main_img_url: group.main_img_url,
+        subname: group.subname || "",
         create_Date: group.create_Date,
         products: productsWithFlashSale,
         total_products: group.products.length,
-        has_flash_sale: hasFlashSale
+        has_flash_sale: hasFlashSale,
+        main_img_url: groupImageUrl 
       };
     }));
 

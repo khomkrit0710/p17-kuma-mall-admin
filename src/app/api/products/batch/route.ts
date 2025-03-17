@@ -84,7 +84,6 @@ export async function POST(request: Request) {
             product_length,
             product_heigth,
             product_weight,
-            img_url,
             size,
             group_name: existingGroup.group_name
           }

@@ -13,7 +13,7 @@ type TagMultiSelectProps = {
   selectedValues: string[];
   onChange: (selectedValues: string[]) => void;
   placeholder?: string;
-  label?: string;
+  label: React.ReactNode;
   id?: string;
   className?: string;
   showEmptyOption?: boolean;
@@ -29,7 +29,6 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   id,
   className = '',
   showEmptyOption = false,
-  emptyOptionLabel = 'ไม่มีหมวดหมู่'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,10 +87,6 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
 
   const getSelectedOptions = () => {
     let selected = [...options.filter(option => selectedValues.includes(String(option.id)))];
-
-    if (showEmptyOption && selectedValues.includes('0')) {
-      selected = [{ id: '0', name: emptyOptionLabel }, ...selected];
-    }
     
     return selected;
   };
@@ -99,12 +94,6 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   let filteredOptions = options.filter(option => 
     option.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (showEmptyOption) {
-    if (!searchTerm || emptyOptionLabel.toLowerCase().includes(searchTerm.toLowerCase())) {
-      filteredOptions = [{ id: '0', name: emptyOptionLabel }, ...filteredOptions];
-    }
-  }
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>

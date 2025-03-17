@@ -280,7 +280,7 @@ export default function AdminManage() {
       </div>
 
       {passwordReset.showForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div className="fixed inset-0 backdrop-blur-x bg-white/30 flex items-center justify-center">
           <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">เปลี่ยนรหัสผ่าน</h2>
             <form onSubmit={resetPassword}>

@@ -13,7 +13,7 @@ type GroupProduct = {
   group_name: string;
   subname: string;
   description: string;
-  main_img_url: string[];
+  main_img_url: string | null;
   create_Date: string;
   products: ProductBrief[];
   total_products: number;
@@ -164,7 +164,7 @@ export default function ProductList() {
 
       setTimeout(() => {
         setSuccess(null);
-      }, 2000);
+      }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบกลุ่มสินค้า');
     } finally {
@@ -398,9 +398,9 @@ export default function ProductList() {
                 groups.map((group) => (
                   <tr key={group.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {group.main_img_url && group.main_img_url.length > 0 ? (
+                      {group.main_img_url ? (
                         <Image 
-                          src={group.main_img_url[0]} 
+                          src={group.main_img_url} 
                           alt={group.group_name}
                           width={48}
                           height={48}
@@ -508,7 +508,7 @@ export default function ProductList() {
         
         {/* กล่องยืนยันการลบ */}
         {deleteDialogOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 backdrop-blur-x bg-white/30 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-sm w-full">
               <h3 className="text-lg font-medium mb-4">ยืนยันการลบ</h3>
               <p className="mb-6 text-gray-600">

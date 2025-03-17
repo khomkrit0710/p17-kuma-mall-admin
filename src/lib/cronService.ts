@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 async function updateFlashSaleStatus() {
   try {
-    console.log('[Cron] Running update flash sale status job...');
+    // console.log('[Cron] Running update flash sale status job...');
 
     const allFlashSales = await prisma.flash_sale.findMany();
 
@@ -52,7 +52,7 @@ async function updateFlashSaleStatus() {
       }
     }
 
-    console.log('[Cron] Update flash sale status complete:', result);
+    // console.log('[Cron] Update flash sale status complete:', result);
     return result;
   } catch (error) {
     console.error('[Cron] Error updating flash sale statuses:', error);
@@ -63,7 +63,7 @@ async function updateFlashSaleStatus() {
 
 async function updateSoldOutFlashSales() {
   try {
-    console.log('[Cron] Running update sold out flash sales job...');
+    // console.log('[Cron] Running update sold out flash sales job...');
 
     const soldOutFlashSales = await prisma.flash_sale.findMany({
       where: {
@@ -94,7 +94,7 @@ async function updateSoldOutFlashSales() {
       }
     }
 
-    console.log('[Cron] Update sold out flash sales complete:', result);
+    // console.log('[Cron] Update sold out flash sales complete:', result);
     return result;
   } catch (error) {
     console.error('[Cron] Error updating sold out flash sales:', error);
@@ -114,7 +114,7 @@ export function startAllCronJobs() {
     }
   });
   
-  console.log('Flash Sale cron jobs scheduled to run every 5 minutes');
+  // console.log('Flash Sale cron jobs scheduled to run every 5 minutes');
 }
 
 

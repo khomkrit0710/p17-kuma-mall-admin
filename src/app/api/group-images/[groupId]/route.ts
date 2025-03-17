@@ -1,4 +1,3 @@
-// src/app/api/group-images/[groupId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getServerSession } from "next-auth";
@@ -6,7 +5,6 @@ import { authOptions } from "@/lib/auth";
 
 const prisma = new PrismaClient();
 
-// GET - ดึงข้อมูลรูปภาพกลุ่มสินค้า
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ groupId: string }> }
@@ -21,34 +19,33 @@ export async function GET(
     }
 
     const groupId = parseInt((await params).groupId);
-    if (isNaN(groupId)) {
+      if (isNaN(groupId)) {
+        return NextResponse.json(
+          { error: "รหัสกลุ่มสินค้าไม่ถูกต้อง" },
+          { status: 400 }
+        );
+      }
+
+      const imageData = await prisma.img_group_product.findUnique({
+        where: { group_id: groupId }
+      });
+
+      if (!imageData) {
+        return NextResponse.json(
+          { img_url: [] }
+        );
+      }
+
+      return NextResponse.json(imageData);
+    } catch (error) {
+      console.error("Error fetching group product images:", error);
       return NextResponse.json(
-        { error: "รหัสกลุ่มสินค้าไม่ถูกต้อง" },
-        { status: 400 }
+        { error: "เกิดข้อผิดพลาดในการดึงข้อมูลรูปภาพกลุ่มสินค้า" },
+        { status: 500 }
       );
     }
-
-    const imageData = await prisma.img_group_product.findUnique({
-      where: { group_id: groupId }
-    });
-
-    if (!imageData) {
-      return NextResponse.json(
-        { img_url: [] }
-      );
-    }
-
-    return NextResponse.json(imageData);
-  } catch (error) {
-    console.error("Error fetching group product images:", error);
-    return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดในการดึงข้อมูลรูปภาพกลุ่มสินค้า" },
-      { status: 500 }
-    );
   }
-}
 
-// POST - อัปเดตหรือสร้างข้อมูลรูปภาพกลุ่มสินค้า
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ groupId: string }> }
@@ -70,7 +67,6 @@ export async function POST(
       );
     }
 
-    // ตรวจสอบว่ามีกลุ่มสินค้านี้จริงหรือไม่
     const groupExists = await prisma.group_product.findUnique({
       where: { id: groupId }
     });
@@ -91,7 +87,6 @@ export async function POST(
       );
     }
 
-    // ตรวจสอบว่ามีข้อมูลรูปภาพอยู่แล้วหรือไม่
     const existingImages = await prisma.img_group_product.findUnique({
       where: { group_id: groupId }
     });
@@ -99,7 +94,6 @@ export async function POST(
     let imageData;
     
     if (existingImages) {
-      // ถ้ามีข้อมูลอยู่แล้วให้อัปเดต
       imageData = await prisma.img_group_product.update({
         where: { id: existingImages.id },
         data: {
@@ -108,7 +102,6 @@ export async function POST(
         }
       });
     } else {
-      // ถ้ายังไม่มีให้สร้างใหม่
       imageData = await prisma.img_group_product.create({
         data: {
           group_id: groupId,
@@ -132,7 +125,6 @@ export async function POST(
   }
 }
 
-// DELETE - ลบข้อมูลรูปภาพกลุ่มสินค้า
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ groupId: string }> }

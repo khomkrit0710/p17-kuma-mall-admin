@@ -296,7 +296,7 @@ export default function FlashSalesPage() {
 
       setTimeout(() => {
         setSuccess(null);
-      }, 3000);
+      }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการสร้าง Flash Sale');
     } finally {
@@ -330,7 +330,7 @@ export default function FlashSalesPage() {
 
       setTimeout(() => {
         setSuccess(null);
-      }, 3000);
+      }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการลบ Flash Sale');
     }

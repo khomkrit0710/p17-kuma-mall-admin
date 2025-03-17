@@ -2,7 +2,8 @@ export type GroupProductData = {
   id: number;
   uuid: string;
   group_name: string;
-  description: string;
+  subname: string;
+  description?: string;
   main_img_url: string[];
   create_Date: string;
   products: ProductData[];

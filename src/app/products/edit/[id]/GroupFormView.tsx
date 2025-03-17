@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import TagMultiSelect from '@/component/TagMultiSelect';
 import ProductDescription from '@/component/ProductDescription';
+import ProductDescriptionViewer from '@/component/ProductDescriptionViewer';
 import { 
   GroupProductData, 
   EditableProductData, 
@@ -90,6 +91,8 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
   success,
   formatDate
 }) => {
+  const [showDescriptionViewer, setShowDescriptionViewer] = useState(false);
+
   if (!groupData) {
     return (
       <div className="container mx-auto p-8">
@@ -310,7 +313,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 <div>{formatDate(groupData.create_Date)}</div>
               </div>
               
-              <div>
+              <div className="mb-4">
                 <span className="text-sm text-gray-500">จำนวนสินค้าในกลุ่ม:</span>
                 <div>{Array.isArray(products) ? products.length : 0} รายการ</div>
               </div>
@@ -353,13 +356,26 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* ปุ่มดูรายละเอียดสินค้า */}
+              {groupData.product_description && (
+                <div className="mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowDescriptionViewer(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                  >
+                    ดูรายละเอียดสินค้า
+                  </button>
+                </div>
+              )}
             </div>
             
             <div>
               {groupData.main_img_url && Array.isArray(groupData.main_img_url) && groupData.main_img_url.length > 0 && (
                 <div>
                   <span className="text-sm text-gray-500 block mb-2">รูปภาพหลัก:</span>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {groupData.main_img_url.map((url, index) => (
                       <div key={index} className="aspect-square">
                         <Image
@@ -378,13 +394,25 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
           </div>
         )}
       </div>
-      <div className="mb-8">
-        <ProductDescription 
-          groupId={groupData.id} 
-          initialDescription={groupData.product_description || undefined}
-          readOnly={false}
+
+      {/* หน้าต่าง ProductDescriptionViewer (จะแสดงเมื่อ showDescriptionViewer เป็น true) */}
+      {showDescriptionViewer && (
+        <ProductDescriptionViewer
+          description={groupData.product_description || null}
+          onClose={() => setShowDescriptionViewer(false)}
         />
-      </div>
+      )}
+
+      {/* ในโหมดแก้ไข ให้แสดง ProductDescription ตามปกติ */}
+      {isEditingGroup && (
+        <div className="mb-8">
+          <ProductDescription 
+            groupId={groupData.id} 
+            initialDescription={groupData.product_description || undefined}
+            readOnly={false}
+          />
+        </div>
+      )}
 
       <div className="bg-white p-6 rounded shadow-md">
         <div className="flex justify-between items-center mb-6">
@@ -996,19 +1024,19 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       <div className="mt-6">
                         <span className="text-sm text-gray-500">รูปภาพสินค้า:</span>
                         <div className="mt-2">
-                          {product.img_url ? (
-                            <Image 
-                              src={product.img_url} 
-                              alt={product.name_sku} 
-                              width={200}
-                              height={200}
-                              className="object-contain border rounded" 
-                            />
-                          ) : (
-                            <div className="w-48 h-48 bg-gray-100 flex items-center justify-center border rounded">
-                              <span className="text-gray-400">ไม่มีรูปภาพ</span>
-                            </div>
-                          )}
+                        {product.img_url ? (
+                          <Image 
+                            src={product.img_url} 
+                            alt={product.name_sku} 
+                            width={200}
+                            height={200}
+                            className="object-contain border rounded" 
+                          />
+                        ) : (
+                          <div className="w-48 h-48 bg-gray-100 flex items-center justify-center border rounded">
+                            <span className="text-gray-400">ไม่มีรูปภาพ</span>
+                          </div>
+                        )}
                         </div>
                       </div>
                     </div>
@@ -1024,7 +1052,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
         </div>
         
         {showDeleteGroupDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-x bg-white/30 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
             <h3 className="text-lg font-medium mb-4">ยืนยันการลบกลุ่มสินค้า</h3>
             <p className="mb-6 text-gray-600">

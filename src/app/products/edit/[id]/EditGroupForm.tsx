@@ -358,7 +358,8 @@ export default function EditGroupForm({ id }: { id: string }) {
       const dataToSend = {
         ...editedGroupData,
         categories: groupCategories,
-        collections: groupCollections
+        collections: groupCollections,
+        main_img_url: editedGroupData.main_img_url
       };
       
       const response = await fetch(`/api/group-products/${groupId}`, {
@@ -384,14 +385,15 @@ export default function EditGroupForm({ id }: { id: string }) {
           .filter(col => groupCollections.includes(col.id.toString()))
           .map(col => ({ id: col.id, name: col.name }));
       
-        setGroupData({
-          ...groupData,
-          group_name: editedGroupData.group_name,
-          description: editedGroupData.description,
-          main_img_url: editedGroupData.main_img_url,
-          categories: formattedCategories,
-          collections: formattedCollections
-        });
+          setGroupData({
+            ...groupData,
+            group_name: editedGroupData.group_name,
+            subname: editedGroupData.subname,
+            description: editedGroupData.description,
+            main_img_url: editedGroupData.main_img_url, 
+            categories: formattedCategories,
+            collections: formattedCollections
+          });
 
         const updatedProducts = products.map(product => ({
           ...product,
@@ -407,7 +409,7 @@ export default function EditGroupForm({ id }: { id: string }) {
 
       setTimeout(() => {
         setSuccess('');
-      }, 2000);
+      }, 1000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึกการแก้ไข');
     } finally {
@@ -465,7 +467,7 @@ export default function EditGroupForm({ id }: { id: string }) {
 
       setTimeout(() => {
         setSuccess('');
-      }, 2000);
+      }, 1000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึกการแก้ไข');
     } finally {
@@ -552,7 +554,7 @@ export default function EditGroupForm({ id }: { id: string }) {
 
       setTimeout(() => {
         setSuccess('');
-      }, 2000);
+      }, 1000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
     } finally {
@@ -585,7 +587,7 @@ export default function EditGroupForm({ id }: { id: string }) {
 
       setTimeout(() => {
         setSuccess('');
-      }, 2000);
+      }, 1000);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการลบสินค้า');
     } finally {

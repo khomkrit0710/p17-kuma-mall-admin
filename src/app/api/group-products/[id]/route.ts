@@ -49,7 +49,8 @@ export async function GET(
                 group_name: true,
                 create_Date: true,
                 update_date: true,
-                flash_sale: true
+                flash_sale: true,
+                img_product: true,
               }
             }
           }
@@ -64,7 +65,8 @@ export async function GET(
             collection: true
           }
         },
-        product_description: true
+        product_description: true,
+        img_group_product: true
       }
     });
 
@@ -88,6 +90,8 @@ export async function GET(
         name: gc.collection.name
       }));
 
+      const productImage = product.img_product ? product.img_product.img_url : null;
+
       return {
         id: product.id,
         uuid: product.uuid,
@@ -103,6 +107,7 @@ export async function GET(
         group_name: product.group_name,
         create_Date: product.create_Date,
         update_date: product.update_date,
+        img_url: productImage,
         categories,
         collections,
         flash_sale: product.flash_sale
@@ -119,15 +124,19 @@ export async function GET(
       name: gc.collection.name
     }));
 
+    const groupImages = group.img_group_product ? group.img_group_product.img_url : [];
+
     return NextResponse.json({
       id: group.id,
       uuid: group.uuid,
       group_name: group.group_name,
+      subname: group.subname || '',
       create_Date: group.create_Date,
       products: formattedProducts,
       categories: groupCategories,
       collections: groupCollections,
-      product_description: group.product_description
+      product_description: group.product_description,
+      main_img_url: groupImages,
     });
   } catch (error) {
     console.error("Error fetching group product:", error);
@@ -238,6 +247,30 @@ export async function PUT(
         await tx.group_to_collection.createMany({
           data: collectionConnections
         });
+      }
+
+      if (main_img_url && main_img_url.length > 0) {
+        const existingImages = await tx.img_group_product.findUnique({
+          where: { group_id: groupId }
+        });
+
+        if (existingImages) {
+          await tx.img_group_product.update({
+            where: { id: existingImages.id },
+            data: {
+              img_url: main_img_url,
+              update_date: new Date()
+            }
+          });
+        } else {
+          await tx.img_group_product.create({
+            data: {
+              group_id: groupId,
+              img_url: main_img_url,
+              update_date: new Date()
+            }
+          });
+        }
       }
 
       return updatedGroup;

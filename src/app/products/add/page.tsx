@@ -53,8 +53,7 @@ export default function AddProductPage() {
     categories: [],
     collections: []
   });
-  
-  // สำหรับรูปภาพหลักของกลุ่มสินค้า
+
   const [groupImages, setGroupImages] = useState<string[]>([]);
   
   const [productsList, setProductsList] = useState<ProductFormData[]>([{
@@ -80,8 +79,6 @@ export default function AddProductPage() {
   const [uploading, setUploading] = useState(false);
   const [groupCategories, setGroupCategories] = useState<string[]>(["0"]);
   const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
-  
-  // สำหรับคำอธิบายสินค้าพร้อมรูปประกอบ
   const [descriptionSections, setDescriptionSections] = useState<DescriptionSection[]>([
     { text: '', img_url: '' }
   ]);
@@ -189,8 +186,6 @@ export default function AddProductPage() {
     updatedProducts.splice(index, 1);
     setProductsList(updatedProducts);
   };
-
-  // อัปโหลดรูปภาพหลักของกลุ่มสินค้า
   const handleGroupImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -221,7 +216,6 @@ export default function AddProductPage() {
     }
   };
 
-  // ลบรูปภาพหลักของกลุ่มสินค้า
   const removeGroupImage = (index: number) => {
     const updatedImages = [...groupImages];
     updatedImages.splice(index, 1);
@@ -265,6 +259,18 @@ export default function AddProductPage() {
       setError('กรุณาระบุชื่อกลุ่มสินค้า');
       return;
     }
+
+    const hasValidCategory = groupCategories.some(catId => catId !== "0");
+    if (!hasValidCategory) {
+      setError('กรุณาเลือกหมวดหมู่อย่างน้อย 1 หมวดหมู่');
+      return;
+    }
+
+    const hasValidCollection = groupCollections.some(colId => colId !== "0");
+    if (!hasValidCollection) {
+      setError('กรุณาเลือกคอลเลคชันอย่างน้อย 1 คอลเลคชัน');
+      return;
+    }
     
     setError('');
     setCurrentStep('products');
@@ -280,7 +286,6 @@ export default function AddProductPage() {
     }
   };
 
-  // ฟังก์ชันสำหรับจัดการคำอธิบายสินค้าโดยละเอียด
   const addDescriptionSection = () => {
     setDescriptionSections([...descriptionSections, { text: '', img_url: '' }]);
   };
@@ -308,7 +313,6 @@ export default function AddProductPage() {
     setDescriptionSections(newSections);
   };
 
-  // อัปโหลดรูปภาพประกอบคำอธิบาย
   const handleDescriptionImageUpload = async (sectionIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -351,6 +355,16 @@ export default function AddProductPage() {
         throw new Error('กรุณาระบุชื่อกลุ่มสินค้า');
       }
 
+      const hasValidCategory = groupCategories.some(catId => catId !== "0");
+      if (!hasValidCategory) {
+        throw new Error('กรุณาเลือกหมวดหมู่อย่างน้อย 1 หมวดหมู่');
+      }
+
+      const hasValidCollection = groupCollections.some(colId => colId !== "0");
+      if (!hasValidCollection) {
+        throw new Error('กรุณาเลือกคอลเลคชันอย่างน้อย 1 คอลเลคชัน');
+      }
+
       for (let i = 0; i < productsList.length; i++) {
         const product = productsList[i];
         if (!product.sku.trim()) {
@@ -364,7 +378,6 @@ export default function AddProductPage() {
         }
       }
 
-      // ส่งข้อมูลกลุ่มสินค้า
       const groupPostData = {
         ...groupData,
         categories: groupCategories,
@@ -387,7 +400,6 @@ export default function AddProductPage() {
       const groupResult = await groupResponse.json();
       const createdGroupId = groupResult.data.id;
 
-      // บันทึกรูปภาพหลักของกลุ่มสินค้า (ถ้ามี)
       if (groupImages.length > 0) {
         await fetch(`/api/group-images/${createdGroupId}`, {
           method: 'POST',
@@ -400,7 +412,6 @@ export default function AddProductPage() {
         });
       }
 
-      // บันทึกข้อมูลคำอธิบายโดยละเอียด
       if (descriptionSections.some(section => section.text.trim() !== '' || section.img_url !== '')) {
         const text_des = descriptionSections.map(section => section.text);
         const img_url_des = descriptionSections.map(section => section.img_url);
@@ -417,7 +428,6 @@ export default function AddProductPage() {
         });
       }
 
-      // ส่งข้อมูลสินค้า
       const productsWithGroup = productsList.map(product => ({
         ...product,
         group_id: createdGroupId
@@ -528,7 +538,7 @@ export default function AddProductPage() {
               <div>
                 <TagMultiSelect
                   id="group-categories"
-                  label="หมวดหมู่ของกลุ่ม"
+                  label={<span>หมวดหมู่ของกลุ่ม <span className="text-red-500">*</span></span>}
                   options={categories}
                   selectedValues={groupCategories}
                   onChange={(selectedValues) => {
@@ -547,7 +557,7 @@ export default function AddProductPage() {
               <div>
                 <TagMultiSelect
                   id="group-collections"
-                  label="คอลเลคชันของกลุ่ม"
+                  label={<span>คอลเลคชันของกลุ่ม <span className="text-red-500">*</span></span>}
                   options={collections}
                   selectedValues={groupCollections}
                   onChange={(selectedValues) => {
@@ -563,7 +573,6 @@ export default function AddProductPage() {
                 />
               </div>
               
-              {/* ส่วนรูปภาพหลักของกลุ่มสินค้า */}
               <div className="mt-6 border-t pt-6">
                 <h2 className="text-xl font-semibold mb-4">รูปภาพหลักของกลุ่มสินค้า</h2>
                 
