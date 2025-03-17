@@ -7,7 +7,6 @@ import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
 import TagMultiSelect from '@/component/TagMultiSelect';
 
-
 type ProductFormData = {
   sku: string;
   name_sku: string;
@@ -34,6 +33,11 @@ type Collection = {
   name: string;
 };
 
+type DescriptionSection = {
+  text: string;
+  img_url: string;
+};
+
 export default function AddProductPage() {
   const router = useRouter();
   const { status } = useSession();
@@ -41,18 +45,18 @@ export default function AddProductPage() {
   const [groupData, setGroupData] = useState<{
     group_name: string;
     subname: string;
-    description: string;
-    main_img_url: string[];
     categories: string[];
     collections: string[];
   }>({
     group_name: '',
     subname: '',
-    description: '',
-    main_img_url: [],
     categories: [],
     collections: []
   });
+  
+  // สำหรับรูปภาพหลักของกลุ่มสินค้า
+  const [groupImages, setGroupImages] = useState<string[]>([]);
+  
   const [productsList, setProductsList] = useState<ProductFormData[]>([{
     sku: '',
     name_sku: '',
@@ -74,9 +78,14 @@ export default function AddProductPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [mainImagePreview, setMainImagePreview] = useState<string[]>([]);
-const [groupCategories, setGroupCategories] = useState<string[]>(["0"]);
-const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
+  const [groupCategories, setGroupCategories] = useState<string[]>(["0"]);
+  const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
+  
+  // สำหรับคำอธิบายสินค้าพร้อมรูปประกอบ
+  const [descriptionSections, setDescriptionSections] = useState<DescriptionSection[]>([
+    { text: '', img_url: '' }
+  ]);
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -181,7 +190,8 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
     setProductsList(updatedProducts);
   };
 
-  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // อัปโหลดรูปภาพหลักของกลุ่มสินค้า
+  const handleGroupImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
@@ -202,19 +212,20 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
       }
 
-      const newImageUrl = data.url;
-      setGroupData({
-        ...groupData,
-        main_img_url: [...groupData.main_img_url, newImageUrl]
-      });
-
-      setMainImagePreview([...mainImagePreview, newImageUrl]);
+      setGroupImages([...groupImages, data.url]);
       
     } catch (error) {
       setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
     } finally {
       setUploading(false);
     }
+  };
+
+  // ลบรูปภาพหลักของกลุ่มสินค้า
+  const removeGroupImage = (index: number) => {
+    const updatedImages = [...groupImages];
+    updatedImages.splice(index, 1);
+    setGroupImages(updatedImages);
   };
 
   const handleProductImageUpload = async (productIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,22 +260,7 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
     }
   };
 
-  const removeMainImage = (index: number) => {
-    const updatedImages = [...groupData.main_img_url];
-    updatedImages.splice(index, 1);
-    
-    setGroupData({
-      ...groupData,
-      main_img_url: updatedImages
-    });
-    
-    const updatedPreviews = [...mainImagePreview];
-    updatedPreviews.splice(index, 1);
-    setMainImagePreview(updatedPreviews);
-  };
-
   const handleContinueToProducts = () => {
-
     if (!groupData.group_name.trim()) {
       setError('กรุณาระบุชื่อกลุ่มสินค้า');
       return;
@@ -284,13 +280,73 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
     }
   };
 
+  // ฟังก์ชันสำหรับจัดการคำอธิบายสินค้าโดยละเอียด
+  const addDescriptionSection = () => {
+    setDescriptionSections([...descriptionSections, { text: '', img_url: '' }]);
+  };
+
+  const removeDescriptionSection = (index: number) => {
+    if (descriptionSections.length <= 1) {
+      setError('ต้องมีส่วนคำอธิบายอย่างน้อย 1 ส่วน');
+      return;
+    }
+    
+    const newSections = [...descriptionSections];
+    newSections.splice(index, 1);
+    setDescriptionSections(newSections);
+  };
+
+  const updateDescriptionText = (index: number, value: string) => {
+    const newSections = [...descriptionSections];
+    newSections[index].text = value;
+    setDescriptionSections(newSections);
+  };
+
+  const removeDescriptionImage = (index: number) => {
+    const newSections = [...descriptionSections];
+    newSections[index].img_url = '';
+    setDescriptionSections(newSections);
+  };
+
+  // อัปโหลดรูปภาพประกอบคำอธิบาย
+  const handleDescriptionImageUpload = async (sectionIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    setUploading(true);
+    
+    try {
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+      }
+  
+      const newSections = [...descriptionSections];
+      newSections[sectionIndex].img_url = data.url;
+      setDescriptionSections(newSections);
+      
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmitAll = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError('');
     
     try {
-
       if (!groupData.group_name.trim()) {
         throw new Error('กรุณาระบุชื่อกลุ่มสินค้า');
       }
@@ -308,6 +364,7 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
         }
       }
 
+      // ส่งข้อมูลกลุ่มสินค้า
       const groupPostData = {
         ...groupData,
         categories: groupCategories,
@@ -330,6 +387,37 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
       const groupResult = await groupResponse.json();
       const createdGroupId = groupResult.data.id;
 
+      // บันทึกรูปภาพหลักของกลุ่มสินค้า (ถ้ามี)
+      if (groupImages.length > 0) {
+        await fetch(`/api/group-images/${createdGroupId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            img_url: groupImages
+          }),
+        });
+      }
+
+      // บันทึกข้อมูลคำอธิบายโดยละเอียด
+      if (descriptionSections.some(section => section.text.trim() !== '' || section.img_url !== '')) {
+        const text_des = descriptionSections.map(section => section.text);
+        const img_url_des = descriptionSections.map(section => section.img_url);
+        
+        await fetch(`/api/product-descriptions/${createdGroupId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            text_des,
+            img_url_des
+          }),
+        });
+      }
+
+      // ส่งข้อมูลสินค้า
       const productsWithGroup = productsList.map(product => ({
         ...product,
         group_id: createdGroupId
@@ -436,19 +524,7 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
                   className="w-full p-2 border border-gray-300 rounded"
                 />
               </div>
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                  คำอธิบายสินค้า
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={groupData.description}
-                  onChange={handleGroupChange}
-                  className="w-full p-2 border border-gray-300 rounded h-24"
-                />
-              </div>
-
+  
               <div>
                 <TagMultiSelect
                   id="group-categories"
@@ -467,7 +543,7 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
                   emptyOptionLabel="ไม่มีหมวดหมู่"
                 />
               </div>
-
+  
               <div>
                 <TagMultiSelect
                   id="group-collections"
@@ -487,51 +563,146 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  รูปภาพหลักสินค้า
-                </label>
-                <input
-                  type="file"
-                  onChange={handleMainImageUpload}
-                  accept="image/*"
-                  className="block w-full text-sm text-gray-500 
-                    file:mr-4 file:py-2 file:px-4 
-                    file:rounded file:border-0 
-                    file:text-sm file:font-semibold 
-                    file:bg-blue-50 file:text-blue-700 
-                    hover:file:bg-blue-100"
-                  disabled={uploading}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  สามารถอัปโหลดรูปภาพหลายรูปได้ (ขนาดไฟล์ไม่เกิน 5MB ต่อรูป)
-                </p>
+              {/* ส่วนรูปภาพหลักของกลุ่มสินค้า */}
+              <div className="mt-6 border-t pt-6">
+                <h2 className="text-xl font-semibold mb-4">รูปภาพหลักของกลุ่มสินค้า</h2>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    อัปโหลดรูปภาพหลัก
+                  </label>
+                  <input
+                    type="file"
+                    onChange={handleGroupImageUpload}
+                    accept="image/*"
+                    className="block w-full text-sm text-gray-500 
+                      file:mr-4 file:py-2 file:px-4 
+                      file:rounded file:border-0 
+                      file:text-sm file:font-semibold 
+                      file:bg-blue-50 file:text-blue-700 
+                      hover:file:bg-blue-100"
+                    disabled={uploading}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    รองรับไฟล์รูปภาพ (ขนาดไม่เกิน 5MB ต่อรูป)
+                  </p>
 
-                {groupData.main_img_url.length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">รูปภาพที่อัปโหลดแล้ว:</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {groupData.main_img_url.map((url, index) => (
-                        <div key={index} className="relative group">
+                  {groupImages.length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">รูปภาพที่อัปโหลดแล้ว:</h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {groupImages.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <Image
+                              src={url} 
+                              alt={`รูปภาพหลัก ${index + 1}`} 
+                              width={96}
+                              height={96}
+                              className="object-cover border rounded"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeGroupImage(index)}
+                              className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                            >
+                              &times;
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* ส่วนคำอธิบายสินค้าโดยละเอียด */}
+              <div className="mt-6 border-t pt-6">
+                <h2 className="text-xl font-semibold mb-4">คำอธิบายสินค้าโดยละเอียด</h2>
+                
+                {descriptionSections.map((section, index) => (
+                  <div 
+                    key={index} 
+                    className="mb-6 pb-6 border-b border-gray-200"
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-medium">ส่วนที่ {index + 1}</h3>
+                      <button
+                        type="button"
+                        onClick={() => removeDescriptionSection(index)}
+                        className="text-red-600 hover:text-red-800"
+                        disabled={descriptionSections.length <= 1}
+                      >
+                        ลบส่วนนี้
+                      </button>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        ข้อความคำอธิบาย
+                      </label>
+                      <textarea
+                        value={section.text}
+                        onChange={(e) => updateDescriptionText(index, e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded h-24"
+                        placeholder="กรอกคำอธิบายสินค้าส่วนนี้..."
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        รูปภาพประกอบ
+                      </label>
+                      
+                      {section.img_url ? (
+                        <div className="mt-2 relative group inline-block">
                           <Image
-                            src={url} 
-                            alt={`รูปภาพ ${index + 1}`} 
-                            width={96}
-                            height={96}
-                            className="object-cover border rounded"
+                            src={section.img_url}
+                            alt={`รูปภาพประกอบส่วนที่ ${index + 1}`}
+                            width={200}
+                            height={200}
+                            className="object-contain border rounded"
                           />
                           <button
                             type="button"
-                            onClick={() => removeMainImage(index)}
-                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                            onClick={() => removeDescriptionImage(index)}
+                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
                           >
                             &times;
                           </button>
                         </div>
-                      ))}
+                      ) : (
+                        <div>
+                          <input
+                            type="file"
+                            onChange={(e) => handleDescriptionImageUpload(index, e)}
+                            accept="image/*"
+                            className="block w-full text-sm text-gray-500 
+                              file:mr-4 file:py-2 file:px-4 
+                              file:rounded file:border-0 
+                              file:text-sm file:font-semibold 
+                              file:bg-blue-50 file:text-blue-700 
+                              hover:file:bg-blue-100"
+                            disabled={uploading}
+                          />
+                          {uploading && (
+                            <p className="text-blue-600 text-sm mt-1">กำลังอัปโหลด...</p>
+                          )}
+                          <p className="text-xs text-gray-500 mt-1">รองรับไฟล์รูปภาพ (ขนาดไม่เกิน 5MB)</p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
+                ))}
+                
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={addDescriptionSection}
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+                  >
+                    + เพิ่มส่วนคำอธิบาย
+                  </button>
+                </div>
               </div>
             </div>
             
@@ -560,11 +731,8 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
             <div className="bg-blue-50 p-4 rounded border border-blue-200 mb-6">
               <h2 className="text-lg font-semibold mb-2">ข้อมูลสินค้า:</h2>
               <p><strong>ชื่อสินค้า:</strong> {groupData.group_name}</p>
-              {groupData.description && (
-                <p><strong>คำอธิบาย:</strong> <span className="whitespace-pre-line">{groupData.description}</span></p>
-              )}
               <div className="mt-2">
-                <button
+              <button
                   type="button"
                   onClick={goBackToGroupEdit}
                   className="text-blue-600 hover:text-blue-800 text-sm underline"
@@ -623,7 +791,7 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
                           required
                         />
                       </div>
-
+  
                       <div>
                         <label htmlFor={`size-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                           ขนาด

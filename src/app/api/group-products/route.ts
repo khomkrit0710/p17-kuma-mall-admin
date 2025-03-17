@@ -162,8 +162,6 @@ export async function POST(request: Request) {
         data: {
           group_name,
           subname,
-          description,
-          main_img_url,
         }
       });
 
