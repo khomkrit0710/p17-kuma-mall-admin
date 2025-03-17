@@ -53,6 +53,19 @@ echo "✅ Backup completed."
 
 sleep 2
 
+read -p "Do you want to continue? This process can't be undone (y/n): " answer
+if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+    echo "Begin to continue process"
+else
+    echo "You abort the reset database process but there is new backups"
+    exit 1
+fi
+
+# Terminate active connections
+echo "Terminate active connections"
+docker exec -e PGPASSWORD=$DB_PASSWORD $DB_CONTAINER \
+    psql -U $DB_USER -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='$DB_NAME';"
+
 # Drop the existing database
 echo "⚠️ Dropping database $DB_NAME..."
 docker exec -e PGPASSWORD=$DB_PASSWORD $DB_CONTAINER \
