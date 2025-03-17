@@ -59,6 +59,7 @@ export async function GET(
           },
         },
         flash_sale: true,
+        img_product: true,
       },
     });
 
@@ -81,7 +82,7 @@ export async function GET(
       product_length: product.product_length,
       product_heigth: product.product_heigth,
       product_weight: product.product_weight,
-      img_url: product.img_url,
+      img_url: product.img_product?.img_url || null,
       group_name: product.group_name,
       create_Date: product.create_Date,
       update_date: product.update_date,
@@ -100,8 +101,6 @@ export async function GET(
       groups: product.product_group.map((pg) => ({
         id: pg.group.id,
         name: pg.group.group_name,
-        description: pg.group.description,
-        images: pg.group.main_img_url,
       })),
       
       flash_sale: product.flash_sale,
@@ -163,6 +162,7 @@ export async function PUT(
       product_heigth = null, 
       product_weight = null,  
       img_url = null,
+      size = null,
       group_name,
       group_id = null 
     } = await request.json();
@@ -206,7 +206,6 @@ export async function PUT(
           product_length,
           product_heigth,
           product_weight,
-          img_url,
           group_name: updatedGroupName
         }
       });
@@ -221,6 +220,30 @@ export async function PUT(
             group_id: group_id
           }
         });
+      }
+
+      if (img_url !== null) {
+        const existingImage = await tx.img_product.findUnique({
+          where: { product_id: productId }
+        });
+        
+        if (existingImage) {
+          await tx.img_product.update({
+            where: { id: existingImage.id },
+            data: {
+              img_url,
+              update_date: new Date()
+            }
+          });
+        } else {
+          await tx.img_product.create({
+            data: {
+              product_id: productId,
+              img_url,
+              update_date: new Date()
+            }
+          });
+        }
       }
 
       return updatedProduct;

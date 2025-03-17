@@ -69,7 +69,8 @@ export async function POST(request: Request) {
           product_length = null,
           product_heigth = null, 
           product_weight = null,
-          img_url = null
+          img_url = null,
+          size = null
         } = productData;
 
         const newProduct = await tx.product.create({
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
             product_heigth,
             product_weight,
             img_url,
+            size,
             group_name: existingGroup.group_name
           }
         });

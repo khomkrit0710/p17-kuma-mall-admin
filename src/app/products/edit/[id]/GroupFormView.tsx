@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import TagMultiSelect from '@/component/TagMultiSelect';
+import ProductDescription from '@/component/ProductDescription';
 import { 
   GroupProductData, 
   EditableProductData, 
@@ -132,8 +133,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
           <strong>สำเร็จ!</strong> {success}
         </div>
       )}
-      
-      {/* ส่วนข้อมูลกลุ่มสินค้า */}
+
       <div className="bg-white p-6 rounded shadow-md mb-8">
         <div className="flex justify-between items-start mb-4">
           <h2 className="text-xl font-semibold">ข้อมูลสินค้า</h2>
@@ -235,8 +235,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
               <p className="text-xs text-gray-500 mt-1">
                 สามารถอัปโหลดรูปภาพหลายรูปได้ (ขนาดไฟล์ไม่เกิน 5MB ต่อรูป)
               </p>
-              
-              {/* แสดงตัวอย่างรูปภาพที่อัปโหลด */}
+
               {editedGroupData.main_img_url && Array.isArray(editedGroupData.main_img_url) && editedGroupData.main_img_url.length > 0 && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">รูปภาพที่อัปโหลดแล้ว:</h3>
@@ -379,8 +378,14 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
           </div>
         )}
       </div>
-      
-      {/* ส่วนรายการสินค้าในกลุ่ม */}
+      <div className="mb-8">
+        <ProductDescription 
+          groupId={groupData.id} 
+          initialDescription={groupData.product_description || undefined}
+          readOnly={false}
+        />
+      </div>
+
       <div className="bg-white p-6 rounded shadow-md">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">รายการสินค้าในกลุ่ม</h2>
@@ -428,6 +433,21 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       onChange={handleNewProductChange}
                       className="w-full p-2 border border-gray-300 rounded"
                       required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="new_size" className="block text-sm font-medium text-gray-700 mb-1">
+                      ขนาด
+                    </label>
+                    <input
+                      type="text"
+                      id="new_size"
+                      name="size"
+                      value={newProduct.size || ''}
+                      onChange={handleNewProductChange}
+                      className="w-full p-2 border border-gray-300 rounded"
+                      placeholder="เช่น S, M, L, XL หรือ 40x60 ซม."
                     />
                   </div>
                   
@@ -673,12 +693,10 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                     )}
                     </div>
                   </div>
-                  
-                  {/* ส่วนเนื้อหาสินค้า */}
+
                   {product.isEditing ? (
                     <div className="p-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* ข้อมูลพื้นฐาน */}
                         <div className="space-y-4">
                           <div>
                             <label htmlFor={`name_sku-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
@@ -694,7 +712,22 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                               required
                             />
                           </div>
-                          
+
+                          <div>
+                            <label htmlFor={`size-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                              ขนาด
+                            </label>
+                            <input
+                              type="text"
+                              id={`size-${index}`}
+                              name="size"
+                              value={product.size || ''}
+                              onChange={(e) => handleProductChange(index, e)}
+                              className="w-full p-2 border border-gray-300 rounded"
+                              placeholder="เช่น S, M, L, XL หรือ 40x60 ซม."
+                            />
+                          </div>
+
                           <div>
                             <label htmlFor={`quantity-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                               จำนวนในคลัง <span className="text-red-500">*</span>
@@ -773,8 +806,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                             )}
                           </div>
                         </div>
-                        
-                        {/* ข้อมูลขนาดและหมวดหมู่ */}
+
                         <div className="space-y-4">
                           <div>
                             <label htmlFor={`product_width-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
@@ -835,8 +867,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                               min="0"
                             />
                           </div>
-                          
-                          {/* แสดงข้อความว่าหมวดหมู่และคอลเลคชันจะใช้จากกลุ่ม */}
+
                           <div className="p-4 bg-blue-50 border border-blue-100 text-blue-700 rounded mt-4">
                             <p className="text-sm">สินค้านี้ใช้หมวดหมู่และคอลเลคชันจากกลุ่มสินค้าโดยอัตโนมัติ</p>
                           </div>
@@ -868,13 +899,17 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                     <div className="p-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          {/* แถวซ้าย */}
                           <div className="space-y-4">
                             <div>
                               <span className="text-sm text-gray-500">ชื่อสินค้า:</span>
                               <div className="font-medium">{product.name_sku}</div>
                             </div>
-                            
+
+                            <div>
+                              <span className="text-sm text-gray-500">ขนาด:</span>
+                              <div>{product.size ? product.size : '-'}</div>
+                            </div>
+
                             <div>
                               <span className="text-sm text-gray-500">จำนวนในคลัง:</span>
                               <div className={product.quantity > 0 ? 'text-green-600' : 'text-red-600'}>
@@ -914,7 +949,6 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                         </div>
                         
                         <div>
-                          {/* แถวขวา */}
                           <div className="space-y-4">
                             <div>
                               <span className="text-sm text-gray-500">ความกว้าง (ซม.):</span>
@@ -989,35 +1023,34 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
           )}
         </div>
         
-        {/* กล่องยืนยันการลบกลุ่ม */}
         {showDeleteGroupDialog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full">
-              <h3 className="text-lg font-medium mb-4">ยืนยันการลบกลุ่มสินค้า</h3>
-              <p className="mb-6 text-gray-600">
-                คุณกำลังจะลบกลุ่มสินค้า <strong>{groupData.group_name}</strong> และสินค้าทั้งหมด {Array.isArray(products) ? products.length : 0} รายการในกลุ่มนี้ 
-                การกระทำนี้ไม่สามารถเรียกคืนได้ คุณแน่ใจหรือไม่?
-              </p>
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowDeleteGroupDialog(false)}
-                  className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  onClick={deleteEntireGroup}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                  disabled={submitting}
-                >
-                  {submitting ? 'กำลังลบ...' : 'ยืนยันการลบ'}
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium mb-4">ยืนยันการลบกลุ่มสินค้า</h3>
+            <p className="mb-6 text-gray-600">
+              คุณกำลังจะลบกลุ่มสินค้า <strong>{groupData.group_name}</strong> และสินค้าทั้งหมด {Array.isArray(products) ? products.length : 0} รายการในกลุ่มนี้ 
+              การกระทำนี้ไม่สามารถเรียกคืนได้ คุณแน่ใจหรือไม่?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteGroupDialog(false)}
+                className="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={deleteEntireGroup}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                disabled={submitting}
+              >
+                {submitting ? 'กำลังลบ...' : 'ยืนยันการลบ'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
-      );
-}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default GroupFormView;

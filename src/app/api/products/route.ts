@@ -115,7 +115,7 @@ export async function GET(request: Request) {
         product_length: product.product_length,
         product_heigth: product.product_heigth,
         product_weight: product.product_weight,
-        img_url: product.img_url,
+        size: product.size,
         group_name: product.group_name,
         create_Date: product.create_Date,
         update_date: product.update_date,
@@ -169,6 +169,7 @@ export async function POST(request: Request) {
       product_weight = null,  
       img_url = null,
       group_name = "",
+      size = null,
       group_id = null
     } = await request.json();
 
@@ -218,10 +219,19 @@ export async function POST(request: Request) {
           product_length,
           product_heigth,
           product_weight,
-          img_url,
           group_name: realGroupName
         }
       });
+
+      if (img_url) {
+        await tx.img_product.create({
+          data: {
+            product_id: newProduct.id,
+            img_url,
+            update_date: new Date()
+          }
+        });
+      }
 
       if (group_id) {
         await tx.product_to_group.create({

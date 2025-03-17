@@ -19,6 +19,7 @@ type ProductFormData = {
   product_heigth: number | null;
   product_weight: number | null;
   img_url: string;
+  size: string;
   categories: string[];
   collections: string[];
 };
@@ -63,6 +64,7 @@ export default function AddProductPage() {
     product_heigth: null,
     product_weight: null,
     img_url: '',
+    size: '',
     categories: [],
     collections: []
   }]);
@@ -161,6 +163,7 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
         product_heigth: null,
         product_weight: null,
         img_url: '',
+        size: '',
         categories: [],
         collections: []
       }
@@ -445,8 +448,7 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
                   className="w-full p-2 border border-gray-300 rounded h-24"
                 />
               </div>
-              
-              {/* ส่วนเลือกหมวดหมู่สำหรับกลุ่มสินค้า */}
+
               <div>
                 <TagMultiSelect
                   id="group-categories"
@@ -504,8 +506,7 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
                 <p className="text-xs text-gray-500 mt-1">
                   สามารถอัปโหลดรูปภาพหลายรูปได้ (ขนาดไฟล์ไม่เกิน 5MB ต่อรูป)
                 </p>
-                
-                {/* แสดงตัวอย่างรูปภาพที่อัปโหลด */}
+
                 {groupData.main_img_url.length > 0 && (
                   <div className="mt-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">รูปภาพที่อัปโหลดแล้ว:</h3>
@@ -592,7 +593,6 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* ข้อมูลพื้นฐาน */}
                     <div className="space-y-4">
                       <div>
                         <label htmlFor={`sku-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
@@ -621,6 +621,21 @@ const [groupCollections, setGroupCollections] = useState<string[]>(["0"]);
                           onChange={(e) => handleProductChange(index, e)}
                           className="w-full p-2 border border-gray-300 rounded"
                           required
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor={`size-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                          ขนาด
+                        </label>
+                        <input
+                          type="text"
+                          id={`size-${index}`}
+                          name="size"
+                          value={product.size}
+                          onChange={(e) => handleProductChange(index, e)}
+                          className="w-full p-2 border border-gray-300 rounded"
+                          placeholder="เช่น S, M, L, XL หรือ 40x60 ซม."
                         />
                       </div>
                       

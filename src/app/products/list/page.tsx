@@ -373,15 +373,13 @@ export default function ProductList() {
             )}
           </form>
         </div>
-        
-        {/* แสดงผลลัพธ์การค้นหา */}
+
         {search && (
           <div className="mb-4">
             ผลการค้นหา: <strong>{pagination.total}</strong> รายการ สำหรับคำค้น <strong>&quot;{search}&quot;</strong>
           </div>
         )}
-        
-        {/* ตารางแสดงข้อมูลกลุ่มสินค้า */}
+
         <div className="bg-white rounded shadow overflow-x-auto mb-6">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -390,7 +388,7 @@ export default function ProductList() {
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อกลุ่มสินค้า</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">คำอธิบาย</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จำนวนสินค้า</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Flash Sale</th> {/* เพิ่มคอลัมน์นี้ */}
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Flash Sale</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">วันที่สร้าง</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จัดการ</th>
               </tr>

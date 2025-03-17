@@ -36,6 +36,7 @@ export default function EditGroupForm({ id }: { id: string }) {
     product_heigth: null,
     product_weight: null,
     img_url: null,
+    size: null,
     categories: [],
     collections: []
   });
@@ -198,12 +199,16 @@ export default function EditGroupForm({ id }: { id: string }) {
         case 'img_url':
           product.img_url = value || null;
           break;
+        case 'size':
+          product.size = value || null;
+          break;
       }
     }
     
     updatedProducts[index] = product;
     setProducts(updatedProducts);
   };
+
   const handleNewProductChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
@@ -434,7 +439,8 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_length: product.product_length,
         product_heigth: product.product_heigth,
         product_weight: product.product_weight,
-        img_url: product.img_url
+        img_url: product.img_url,
+        size: product.size
       };
       
       const response = await fetch(`/api/products/${product.id}`, {
@@ -516,6 +522,7 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_heigth: data.data.product_heigth,
         product_weight: data.data.product_weight,
         img_url: data.data.img_url,
+        size: data.data.size,
         categories: groupCategories,
         collections: groupCollections,
         isEditing: false,
@@ -535,6 +542,7 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_heigth: null,
         product_weight: null,
         img_url: null,
+        size: null,
         categories: [],
         collections: []
       });

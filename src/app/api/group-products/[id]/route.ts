@@ -41,7 +41,6 @@ export async function GET(
                 name_sku: true,
                 quantity: true,
                 price_origin: true,
-                img_url: true,
                 make_price: true,
                 product_width: true,
                 product_length: true,
@@ -64,7 +63,8 @@ export async function GET(
           include: {
             collection: true
           }
-        }
+        },
+        product_description: true
       }
     });
 
@@ -100,7 +100,6 @@ export async function GET(
         product_length: product.product_length,
         product_heigth: product.product_heigth,
         product_weight: product.product_weight,
-        img_url: product.img_url,
         group_name: product.group_name,
         create_Date: product.create_Date,
         update_date: product.update_date,
@@ -124,12 +123,11 @@ export async function GET(
       id: group.id,
       uuid: group.uuid,
       group_name: group.group_name,
-      description: group.description,
-      main_img_url: group.main_img_url,
       create_Date: group.create_Date,
       products: formattedProducts,
       categories: groupCategories,
-      collections: groupCollections
+      collections: groupCollections,
+      product_description: group.product_description
     });
   } catch (error) {
     console.error("Error fetching group product:", error);
@@ -196,8 +194,6 @@ export async function PUT(
         data: {
           group_name,
           subname,
-          description,
-          main_img_url
         }
       });
 

@@ -34,12 +34,13 @@ model product {
   product_length      Int?        
   product_heigth      Int?
   product_weight      Int?
-  img_url             String?
   update_date         DateTime          @updatedAt
+  size                String?
 
   flash_sale          flash_sale?  
   product_group       product_to_group[] 
   group_name          String            @db.Text @default("") 
+  img_product         img_product?
 }
 
 model group_product {
@@ -48,12 +49,51 @@ model group_product {
   create_Date         DateTime          @default(now())
   group_name          String            @db.Text @default("")
   subname             String            @db.Text @default("")
-  main_img_url        String[]          @default([]) 
-  description         String            @db.Text @default("")
-  
+
   products            product_to_group[] 
   group_categories    group_to_category[]
   group_collections   group_to_collection[]
+  product_description product_description?
+  img_group_product   img_group_product?
+}
+
+model product_description {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @default(uuid())
+  group_id    Int      @unique
+  text_des    String[] @default([])
+  img_url_des String[] @default([])
+  create_date DateTime @default(now())
+  update_date DateTime @updatedAt
+  
+  group       group_product @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  @@index([group_id])
+}
+
+model img_product {
+  id          Int      @id @default(autoincrement())
+  product_id  Int      @unique
+  img_url     String
+  create_date DateTime @default(now())
+  update_date DateTime @updatedAt
+  
+  product     product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
+}
+
+
+model img_group_product {
+  id          Int      @id @default(autoincrement())
+  group_id    Int      @unique
+  img_url     String[] @default([])
+  create_date DateTime @default(now())
+  update_date DateTime @updatedAt
+  
+  group       group_product @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  @@index([group_id])
 }
 
 model category {

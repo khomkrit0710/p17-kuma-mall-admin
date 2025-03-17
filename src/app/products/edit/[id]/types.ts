@@ -8,6 +8,13 @@ export type GroupProductData = {
   products: ProductData[];
   categories?: { id: number; name: string }[]; 
   collections?: { id: number; name: string }[];
+  product_description?: {
+    id: number;
+    text_des: string[];
+    img_url_des: string[];
+    create_date: string;
+    update_date: string;
+  } | null;
 };
 
 export type ProductData = {
@@ -23,6 +30,7 @@ export type ProductData = {
   product_heigth: number | null;
   product_weight: number | null;
   img_url: string | null;
+  size: string | null;
   group_name: string;
   create_Date: string;
   update_date: string;
@@ -51,6 +59,7 @@ export type EditableProductData = {
   product_heigth: number | null;
   product_weight: number | null;
   img_url: string | null;
+  size: string | null;
   categories: string[];
   collections: string[];
   isEditing: boolean;
