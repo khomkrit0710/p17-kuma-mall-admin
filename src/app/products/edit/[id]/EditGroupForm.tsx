@@ -35,7 +35,7 @@ export default function EditGroupForm({ id }: { id: string }) {
     product_length: null,
     product_heigth: null,
     product_weight: null,
-    img_url: null,
+    img_product: null,
     size: null,
     categories: [],
     collections: []
@@ -103,7 +103,9 @@ export default function EditGroupForm({ id }: { id: string }) {
             product_length: product.product_length,
             product_heigth: product.product_heigth,
             product_weight: product.product_weight,
-            img_url: product.img_url,
+            img_product: product.img_product ? product.img_product : null,
+            img_url: product.img_url || null,
+            size: product.size,
             categories: data.categories.map((cat: { id: { toString: () => string } }): string => cat.id.toString()),
             collections: data.collections.map((col: { id: { toString: () => string } }): string => col.id.toString()),
             isEditing: false,
@@ -197,7 +199,7 @@ export default function EditGroupForm({ id }: { id: string }) {
           product.sku = value;
           break;
         case 'img_url':
-          product.img_url = value || null;
+          product.img_product = value ? { img_url: value } : null;
           break;
         case 'size':
           product.size = value || null;
@@ -280,7 +282,9 @@ export default function EditGroupForm({ id }: { id: string }) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
       }
       const updatedProducts = [...products];
-      updatedProducts[productIndex].img_url = data.url;
+      updatedProducts[productIndex].img_product = {
+        img_url: data.url
+      };
       setProducts(updatedProducts);
       
     } catch (error) {
@@ -313,7 +317,9 @@ export default function EditGroupForm({ id }: { id: string }) {
 
       setNewProduct({
         ...newProduct,
-        img_url: data.url
+        img_product: {
+          img_url: data.url
+        }
       });
       
     } catch (error) {
@@ -441,7 +447,7 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_length: product.product_length,
         product_heigth: product.product_heigth,
         product_weight: product.product_weight,
-        img_url: product.img_url,
+        img_url: product.img_product,
         size: product.size
       };
       
@@ -523,12 +529,12 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_length: data.data.product_length,
         product_heigth: data.data.product_heigth,
         product_weight: data.data.product_weight,
-        img_url: data.data.img_url,
+        img_product: data.data.img_url,
         size: data.data.size,
         categories: groupCategories,
         collections: groupCollections,
         isEditing: false,
-        isDeleting: false
+        isDeleting: false,
       };
       
       setProducts([...products, newProductData]);
@@ -543,6 +549,7 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_length: null,
         product_heigth: null,
         product_weight: null,
+        img_product: null,
         img_url: null,
         size: null,
         categories: [],

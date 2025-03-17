@@ -544,10 +544,10 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       disabled={uploading}
                     />
                     
-                    {newProduct.img_url && (
+                    {newProduct.img_product?.img_url && (
                       <div className="mt-2">
                         <Image
-                          src={newProduct.img_url} 
+                          src={newProduct.img_product?.img_url} 
                           alt="ตัวอย่างรูปภาพ" 
                           width={96}
                           height={96}
@@ -821,10 +821,10 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                               disabled={uploading}
                             />
                             
-                            {product.img_url && (
+                            {product.img_product && product.img_product.img_url && (
                               <div className="mt-2">
                                 <Image 
-                                  src={product.img_url} 
+                                  src={product.img_product.img_url} 
                                   alt={product.name_sku} 
                                   width={96}
                                   height={96}
@@ -1024,7 +1024,15 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       <div className="mt-6">
                         <span className="text-sm text-gray-500">รูปภาพสินค้า:</span>
                         <div className="mt-2">
-                        {product.img_url ? (
+                        {product.img_product && product.img_product.img_url ? (
+                          <Image 
+                            src={product.img_product.img_url} 
+                            alt={product.name_sku} 
+                            width={200}
+                            height={200}
+                            className="object-contain border rounded" 
+                          />
+                        ) : product.img_url ? (
                           <Image 
                             src={product.img_url} 
                             alt={product.name_sku} 
