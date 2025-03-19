@@ -82,7 +82,8 @@ export async function GET(
       product_length: product.product_length,
       product_heigth: product.product_heigth,
       product_weight: product.product_weight,
-      img_url: product.img_product?.img_url || null,
+      img_product: product.img_product,
+      size: product.size,
       group_name: product.group_name,
       create_Date: product.create_Date,
       update_date: product.update_date,
@@ -102,7 +103,6 @@ export async function GET(
         id: pg.group.id,
         name: pg.group.group_name,
       })),
-      
       flash_sale: product.flash_sale,
     };
 
@@ -141,7 +141,8 @@ export async function PUT(
     const existingProduct = await prisma.product.findUnique({
       where: { id: productId },
       include: {
-        product_group: true
+        product_group: true,
+        img_product: true
       }
     });
 
@@ -161,7 +162,7 @@ export async function PUT(
       product_length = null,
       product_heigth = null, 
       product_weight = null,  
-      img_url = null,
+      img_url = null, // รองรับการรับค่า img_url เพื่อ backward compatibility
       size = null,
       group_name,
       group_id = null 
@@ -206,7 +207,11 @@ export async function PUT(
           product_length,
           product_heigth,
           product_weight,
+          size,
           group_name: updatedGroupName
+        },
+        include: {
+          img_product: true
         }
       });
 
@@ -222,37 +227,46 @@ export async function PUT(
         });
       }
 
-      if (img_url !== null) {
-        const existingImage = await tx.img_product.findUnique({
-          where: { product_id: productId }
-        });
+      if (img_url) {
+        const finalImgUrl = typeof img_url === 'string' ? img_url : 
+                         (typeof img_url === 'object' && img_url !== null && 'img_url' in img_url) ? 
+                         (img_url as {img_url: string}).img_url : null;
         
-        if (existingImage) {
-          await tx.img_product.update({
-            where: { id: existingImage.id },
-            data: {
-              img_url,
-              update_date: new Date()
-            }
-          });
-        } else {
-          await tx.img_product.create({
-            data: {
-              product_id: productId,
-              img_url,
-              update_date: new Date()
-            }
-          });
+        if (finalImgUrl) {
+          if (existingProduct.img_product) {
+            await tx.img_product.update({
+              where: { product_id: productId },
+              data: {
+                img_url: finalImgUrl,
+                update_date: new Date()
+              }
+            });
+          } else {
+            await tx.img_product.create({
+              data: {
+                product_id: productId,
+                img_url: finalImgUrl,
+                update_date: new Date()
+              }
+            });
+          }
         }
       }
 
       return updatedProduct;
     });
 
+    const updatedProductWithImage = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        img_product: true
+      }
+    });
+
     return NextResponse.json({ 
       success: true,
       message: "อัปเดตสินค้าสำเร็จ",
-      data: result
+      data: updatedProductWithImage
     });
   } catch (error) {
     console.error("Error updating product:", error);

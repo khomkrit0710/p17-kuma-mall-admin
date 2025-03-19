@@ -428,8 +428,19 @@ export default function AddProductPage() {
         });
       }
 
+      // สร้างข้อมูลสินค้าโดยส่งข้อมูลรูปภาพ (img_url) ไปด้วย
       const productsWithGroup = productsList.map(product => ({
-        ...product,
+        sku: product.sku,
+        name_sku: product.name_sku,
+        quantity: product.quantity,
+        make_price: product.make_price,
+        price_origin: product.price_origin,
+        product_width: product.product_width,
+        product_length: product.product_length,
+        product_heigth: product.product_heigth,
+        product_weight: product.product_weight,
+        size: product.size,
+        img_url: product.img_url,
         group_id: createdGroupId
       }));
 

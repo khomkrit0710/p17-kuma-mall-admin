@@ -95,6 +95,17 @@ export async function POST(request: Request) {
             group_id: group_id
           }
         });
+
+        if (img_url) {
+          await tx.img_product.create({
+            data: {
+              product_id: newProduct.id,
+              img_url,
+              update_date: new Date()
+            }
+          });
+        }
+
         createdProducts.push(newProduct);
       }
 
