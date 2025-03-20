@@ -380,9 +380,9 @@ export default function CollectionsPage() {
                 collections.map((collection) => (
                   <tr key={collection.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {collection.img_url ? (
+                      {collection.img_url_collection  ? (
                         <Image 
-                          src={collection.img_url} 
+                          src={collection.img_url_collection } 
                           alt={collection.name}
                           width={48}
                           height={48}

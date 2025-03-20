@@ -22,6 +22,7 @@ export async function GET() {
         uuid: true,
         name: true,
         description: true,
+        img_url_category: true
       },
       orderBy: {
         name: "asc",
