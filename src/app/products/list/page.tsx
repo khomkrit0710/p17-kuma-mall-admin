@@ -13,7 +13,7 @@ type GroupProduct = {
   group_name: string;
   subname: string;
   description: string;
-  main_img_url: string | null;
+  img_url_group: string | null;
   create_Date: string;
   products: ProductBrief[];
   total_products: number;
@@ -398,9 +398,9 @@ export default function ProductList() {
                 groups.map((group) => (
                   <tr key={group.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap">
-                      {group.main_img_url ? (
+                      {group.img_url_group ? (
                         <Image 
-                          src={group.main_img_url} 
+                          src={group.img_url_group} 
                           alt={group.group_name}
                           width={48}
                           height={48}
