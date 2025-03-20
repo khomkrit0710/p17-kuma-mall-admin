@@ -492,8 +492,7 @@ export default function ProductList() {
             </tbody>
           </table>
         </div>
-        
-        {/* แสดง Pagination */}
+
         {pagination.totalPages > 0 && (
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded shadow">
             <div className="text-sm text-gray-700">
@@ -505,8 +504,7 @@ export default function ProductList() {
             </div>
           </div>
         )}
-        
-        {/* กล่องยืนยันการลบ */}
+
         {deleteDialogOpen && (
           <div className="fixed inset-0 backdrop-blur-x bg-white/30 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-sm w-full">

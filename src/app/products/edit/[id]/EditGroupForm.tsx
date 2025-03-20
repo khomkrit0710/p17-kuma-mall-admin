@@ -36,7 +36,6 @@ export default function EditGroupForm({ id }: { id: string }) {
     product_heigth: null,
     product_weight: null,
     img_product: null,
-    img_url: null,
     size: null,
     categories: [],
     collections: []
@@ -286,7 +285,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       updatedProducts[productIndex].img_product = {
         img_url_product: data.url
       };
-      updatedProducts[productIndex].img_url = data.url;
+      updatedProducts[productIndex].img_product = data.url;
 
       setProducts(updatedProducts);
       
@@ -539,7 +538,6 @@ export default function EditGroupForm({ id }: { id: string }) {
         collections: groupCollections,
         isEditing: false,
         isDeleting: false,
-        img_url: undefined
       };
       
       setProducts([...products, newProductData]);
@@ -555,7 +553,6 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_heigth: null,
         product_weight: null,
         img_product: null,
-        img_url: null,
         size: null,
         categories: [],
         collections: []

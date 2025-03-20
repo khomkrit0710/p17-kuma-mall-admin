@@ -86,12 +86,12 @@ const TagMultiSelect: React.FC<TagMultiSelectProps> = ({
   };
 
   const getSelectedOptions = () => {
-    let selected = [...options.filter(option => selectedValues.includes(String(option.id)))];
+    const selected = [...options.filter(option => selectedValues.includes(String(option.id)))];
     
     return selected;
   };
 
-  let filteredOptions = options.filter(option => 
+  const filteredOptions = options.filter(option => 
     option.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 

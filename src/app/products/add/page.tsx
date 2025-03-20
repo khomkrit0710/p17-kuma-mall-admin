@@ -8,7 +8,7 @@ import Image from 'next/image';
 import TagMultiSelect from '@/component/TagMultiSelect';
 
 type ProductFormData = {
-  img_url_product: any;
+  img_url_product: string;
   sku: string;
   name_sku: string;
   quantity: number;
@@ -500,8 +500,7 @@ export default function AddProductPage() {
             <strong>สำเร็จ!</strong> {success}
           </div>
         )}
-        
-        {/* แสดงตัวบอกขั้นตอน */}
+
         <div className="flex mb-6">
           <div className={`flex-1 text-center py-2 ${currentStep === 'group' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
             1. สร้างกลุ่มสินค้า
@@ -510,8 +509,7 @@ export default function AddProductPage() {
             2. เพิ่มสินค้าในกลุ่ม
           </div>
         </div>
-        
-        {/* ส่วนสร้างกลุ่มสินค้า */}
+
         {currentStep === 'group' && (
           <div className="bg-white p-6 rounded shadow-md">
             <h2 className="text-xl font-semibold mb-4">ข้อมูลสินค้า</h2>
@@ -633,8 +631,7 @@ export default function AddProductPage() {
                   )}
                 </div>
               </div>
-              
-              {/* ส่วนคำอธิบายสินค้าโดยละเอียด */}
+
               <div className="mt-6 border-t pt-6">
                 <h2 className="text-xl font-semibold mb-4">คำอธิบายสินค้าโดยละเอียด</h2>
                 
@@ -904,8 +901,7 @@ export default function AddProductPage() {
                         )}
                       </div>
                     </div>
-                    
-                    {/* ข้อมูลขนาดและหมวดหมู่ */}
+
                     <div className="space-y-4">
                       <div>
                         <label htmlFor={`product_width-${index}`} className="block text-sm font-medium text-gray-700 mb-1">

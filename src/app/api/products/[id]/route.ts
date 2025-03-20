@@ -194,7 +194,7 @@ export async function PUT(
       shouldUpdateGroup = currentGroupId !== group_id;
       updatedGroupName = existingGroup.group_name;
     }
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result = await prisma.$transaction(async (tx) => {
       const updatedProduct = await tx.product.update({
         where: { id: productId },

@@ -61,8 +61,7 @@ function Sidebar() {
             Flash Sale
           </Link>
         </li>
-        
-        {/* แสดงเฉพาะผู้ใช้ที่มีสิทธิ์ Super Admin */}
+
         {isSuperAdmin && (
           <li>
             <Link 

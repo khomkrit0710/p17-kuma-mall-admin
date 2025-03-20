@@ -278,8 +278,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 emptyOptionLabel="ไม่มีหมวดหมู่"
               />
             </div>
-            
-            {/* คอลเลคชันของกลุ่ม */}
+
             <div className="mb-4">
               <TagMultiSelect
                 id="group-collections"
@@ -318,7 +317,6 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 <div>{Array.isArray(products) ? products.length : 0} รายการ</div>
               </div>
 
-              {/* แสดงหมวดหมู่ของกลุ่ม */}
               {groupData.categories && Array.isArray(groupData.categories) && groupData.categories.length > 0 ? (
                 <div className="mt-4">
                   <span className="text-sm text-gray-500 block mb-2">หมวดหมู่ของกลุ่ม:</span>
@@ -340,7 +338,6 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 </div>
               )}
 
-              {/* แสดงคอลเลคชันของกลุ่ม */}
               {groupData.collections && Array.isArray(groupData.collections) && groupData.collections.length > 0 && (
                 <div className="mt-4">
                   <span className="text-sm text-gray-500 block mb-2">คอลเลคชันของกลุ่ม:</span>
@@ -357,7 +354,6 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 </div>
               )}
 
-              {/* ปุ่มดูรายละเอียดสินค้า */}
               {groupData.product_description && (
                 <div className="mt-6">
                   <button
@@ -395,7 +391,6 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
         )}
       </div>
 
-      {/* หน้าต่าง ProductDescriptionViewer (จะแสดงเมื่อ showDescriptionViewer เป็น true) */}
       {showDescriptionViewer && (
         <ProductDescriptionViewer
           description={groupData.product_description || null}
@@ -403,7 +398,6 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
         />
       )}
 
-      {/* ในโหมดแก้ไข ให้แสดง ProductDescription ตามปกติ */}
       {isEditingGroup && (
         <div className="mb-8">
           <ProductDescription 
@@ -424,15 +418,12 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
             {showAddProductForm ? 'ยกเลิก' : '+ เพิ่มสินค้าใหม่'}
           </button>
         </div>
-        
-        {/* ฟอร์มเพิ่มสินค้าใหม่ */}
+
         {showAddProductForm && (
           <div className="mb-8 p-4 border border-green-200 rounded bg-green-50">
             <h3 className="text-lg font-medium mb-4">เพิ่มสินค้าใหม่ในกลุ่ม</h3>
             <form onSubmit={addNewProductToGroup}>
-              {/* เนื้อหาฟอร์มเพิ่มสินค้า */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* ข้อมูลพื้นฐาน */}
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="new_sku" className="block text-sm font-medium text-gray-700 mb-1">
@@ -618,8 +609,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       min="0"
                     />
                   </div>
-                  
-                  {/* แสดงข้อความแจ้งเตือนว่าสินค้าใหม่จะใช้หมวดหมู่และคอลเลคชันจากกลุ่ม */}
+
                   <div className="p-4 bg-blue-50 border border-blue-100 text-blue-700 rounded mt-4">
                     <p className="font-medium mb-2">หมายเหตุ:</p>
                     <p className="text-sm">สินค้าใหม่จะใช้หมวดหมู่และคอลเลคชันจากกลุ่มสินค้านี้โดยอัตโนมัติ</p>
@@ -676,13 +666,11 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
             </form>
           </div>
         )}
-        
-      {/* รายการสินค้า */}
+
       {Array.isArray(products) && products.length > 0 ? (
         <div className="space-y-4">
           {products.map((product, index) => (
             <div key={product.id} className="border rounded overflow-hidden">
-              {/* ส่วนหัวสินค้า */}
               <div className="bg-gray-50 p-3 flex justify-between items-center">
                 <div className="font-medium">{product.name_sku} <span className="text-gray-500 text-sm">({product.sku})</span></div>
                 <div className="flex space-x-2">
@@ -1018,8 +1006,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                           </div>
                         </div>
                       </div>
-                      
-                      {/* รูปภาพสินค้า */}
+
                       <div className="mt-6">
                         <span className="text-sm text-gray-500">รูปภาพสินค้า:</span>
                         <div className="mt-2">

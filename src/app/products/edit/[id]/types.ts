@@ -1,5 +1,5 @@
 export type GroupProductData = {
-  img_url_group: boolean;
+  img_url_group: string[];
   id: number;
   uuid: string;
   group_name: string;
@@ -51,7 +51,6 @@ export type ProductData = {
 
 
 export type EditableProductData = {
-  img_url: any;
   id: number;
   sku: string;
   name_sku: string;

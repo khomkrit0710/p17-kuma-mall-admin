@@ -182,7 +182,6 @@ export async function PUT(
     const { 
       group_name,
       subname = "",
-      description = "", 
       img_url_group = [],
       categories = [],
       collections = []

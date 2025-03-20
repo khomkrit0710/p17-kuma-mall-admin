@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 
 type ProductDescriptionProps = {
@@ -30,31 +30,7 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
   const [uploading, setUploading] = useState<number | null>(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
-  useEffect(() => {
-    if (initialDescription) {
-      const { text_des, img_url_des } = initialDescription;
-      const newSections: DescriptionSection[] = [];
-
-      const maxLength = Math.max(text_des.length, img_url_des.length);
-      
-      for (let i = 0; i < maxLength; i++) {
-        newSections.push({
-          text: text_des[i] || '',
-          img_url: img_url_des[i] || ''
-        });
-      }
-
-      if (newSections.length === 0) {
-        newSections.push({ text: '', img_url: '' });
-      }
-      
-      setSections(newSections);
-    } else {
-      fetchDescription();
-    }
-  }, [initialDescription, groupId]);
-
-  const fetchDescription = async () => {
+  const fetchDescription = useCallback(async () => {
     if (!groupId) return;
     
     setLoading(true);
@@ -92,7 +68,31 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupId]);
+
+  useEffect(() => {
+    if (initialDescription) {
+      const { text_des, img_url_des } = initialDescription;
+      const newSections: DescriptionSection[] = [];
+
+      const maxLength = Math.max(text_des.length, img_url_des.length);
+      
+      for (let i = 0; i < maxLength; i++) {
+        newSections.push({
+          text: text_des[i] || '',
+          img_url: img_url_des[i] || ''
+        });
+      }
+
+      if (newSections.length === 0) {
+        newSections.push({ text: '', img_url: '' });
+      }
+      
+      setSections(newSections);
+    } else {
+      fetchDescription();
+    }
+  }, [initialDescription, fetchDescription]);
 
   const addSection = () => {
     setSections([...sections, { text: '', img_url: '' }]);
@@ -257,8 +257,7 @@ const ProductDescription: React.FC<ProductDescriptionProps> = ({
     <div className="bg-white p-6 rounded shadow-md">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">คำอธิบายสินค้า</h2>
-        
-        {/* ปุ่มดูคำอธิบายทั้งหมด */}
+
         {!readOnly && (
           <div className="flex space-x-2">
             <button
