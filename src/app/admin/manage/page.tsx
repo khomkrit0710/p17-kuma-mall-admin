@@ -16,7 +16,6 @@ type Admin = {
 
 export default function AdminManage() {
 
-  //<<-------------------State------------------->>
   const { data: session, status } = useSession();
   const router = useRouter();
   const [admins, setAdmins] = useState<Admin[]>([]);
@@ -33,8 +32,7 @@ export default function AdminManage() {
     newPassword: '',
     showForm: false
   });
-  
-  //<<-------------------useEffect------------------->>
+
   useEffect(() => {
     if (status === 'loading') return;
     if (!session?.user || session.user.role !== 'superadmin') {
@@ -44,7 +42,6 @@ export default function AdminManage() {
     }
   }, [session, status, router]);
 
-  //<<-------------------function------------------->>
   const fetchAdmins = async () => {
     setLoading(true);
     try {
@@ -146,7 +143,6 @@ export default function AdminManage() {
     return null;
   }
 
-  //<<-------------------UI------------------->>
   return (
     <DashboardLayout>
     <div className="container mx-auto p-8">

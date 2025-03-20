@@ -6,19 +6,17 @@ import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
 
-//<<-------------------Type------------------->>
 type Category = {
+  img_url_category: string;
   id: number;
   uuid: string;
   name: string;
   description: string | null;
   create_Date: string;
-  img_url: string | null;
 };
 
 export default function CategoriesPage() {
 
-    //<<-------------------State------------------->>
   const router = useRouter();
   const { status } = useSession();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -29,15 +27,14 @@ export default function CategoriesPage() {
     id: 0,
     name: '',
     description: '',
-    img_url: '',
+    img_url_category: '',
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
-    //<<-------------------useEffect------------------->>
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -69,14 +66,13 @@ export default function CategoriesPage() {
     
     fetchCategories();
   }, [status]);
-  
-    //<<-------------------handle------------------->>
+
   const handleAddCategory = () => {
     if (totalCategories >= 11) {
       setError('ไม่สามารถเพิ่มหมวดหมู่ได้อีก เนื่องจากมีจำนวนหมวดหมู่สูงสุดแล้ว (11 รายการ)');
       return;
     }
-    setFormData({ id: 0, name: '', description: '', img_url: '' });
+    setFormData({ id: 0, name: '', description: '', img_url_category: '' });
     setIsEditing(false);
     setShowForm(true);
     setError(null);
@@ -87,7 +83,7 @@ export default function CategoriesPage() {
       id: category.id, 
       name: category.name, 
       description: category.description || '',
-      img_url: category.img_url || ''
+      img_url_category: category.img_url_category || ''
     });
     setIsEditing(true);
     setShowForm(true);
@@ -125,7 +121,7 @@ export default function CategoriesPage() {
       
       setFormData(prevFormData => ({
         ...prevFormData,
-        img_url: data.url
+        img_url_category: data.url 
       }));
       
     } catch (error) {
@@ -158,7 +154,7 @@ export default function CategoriesPage() {
           body: JSON.stringify({
             name: formData.name,
             description: formData.description,
-            img_url: formData.img_url || null
+            img_url_category: formData.img_url_category || null
           }),
         });
       } else {
@@ -170,7 +166,7 @@ export default function CategoriesPage() {
           body: JSON.stringify({
             name: formData.name,
             description: formData.description,
-            img_url: formData.img_url || null
+            img_url_category: formData.img_url_category || null 
           }),
         });
       }
@@ -180,7 +176,7 @@ export default function CategoriesPage() {
       if (!response.ok) {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการบันทึกหมวดหมู่');
       }
-      setFormData({ id: 0, name: '', description: '', img_url: '' });
+      setFormData({ id: 0, name: '', description: '', img_url_category: '' });
       setShowForm(false);
       setSuccess(isEditing ? 'แก้ไขหมวดหมู่สำเร็จ' : 'เพิ่มหมวดหมู่สำเร็จ');
 
@@ -336,10 +332,10 @@ export default function CategoriesPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">รองรับไฟล์รูปภาพ (ขนาดไม่เกิน 5MB)</p>
                 
-                {formData.img_url && (
+                {formData.img_url_category && (
                   <div className="mt-2">
                     <Image
-                      src={formData.img_url} 
+                      src={formData.img_url_category} 
                       alt="รูปภาพหมวดหมู่" 
                       width={96}
                       height={96}
@@ -392,9 +388,9 @@ export default function CategoriesPage() {
                 categories.map((category) => (
                   <tr key={category.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {category.img_url ? (
+                      {category.img_url_category ? (
                         <Image 
-                          src={category.img_url} 
+                          src={category.img_url_category} 
                           alt={category.name}
                           width={48}
                           height={48}

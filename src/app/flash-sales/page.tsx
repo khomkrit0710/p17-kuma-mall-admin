@@ -21,7 +21,7 @@ type FlashSale = {
  update_date: string;
  product: {
    name_sku: string;
-   img_url: string | null;
+   img_url_product: string | null;
    quantity: number;
  };
 };
@@ -32,7 +32,7 @@ type Product = {
  name_sku: string;
  price_origin: number;
  quantity: number;
- img_url: string | null;
+ img_url_product: string | null;
 };
 
 type Pagination = {
@@ -642,9 +642,9 @@ export default function FlashSalesPage() {
                flashSales.map((flashSale) => (
                  <tr key={flashSale.id} className="hover:bg-gray-50">
                    <td className="px-4 py-3 whitespace-nowrap">
-                     {flashSale.product.img_url ? (
+                     {flashSale.product.img_url_product ? (
                        <Image 
-                         src={flashSale.product.img_url} 
+                         src={flashSale.product.img_url_product} 
                          alt={flashSale.product.name_sku} 
                          width={48}
                          height={48}
@@ -771,9 +771,9 @@ export default function FlashSalesPage() {
                               onClick={() => handleSelectProduct(product)}
                             >
                               <div className="mr-3">
-                                {product.img_url ? (
+                                {product.img_url_product ? (
                                   <Image
-                                    src={product.img_url}
+                                    src={product.img_url_product}
                                     alt={product.name_sku}
                                     width={40}
                                     height={40}
@@ -812,9 +812,9 @@ export default function FlashSalesPage() {
                     <div className="mb-6">
                       <div className="flex items-center mb-4">
                         <div className="mr-4">
-                          {selectedProduct.img_url ? (
+                          {selectedProduct.img_url_product ? (
                             <Image
-                              src={selectedProduct.img_url}
+                              src={selectedProduct.img_url_product}
                               alt={selectedProduct.name_sku}
                               width={64}
                               height={64}

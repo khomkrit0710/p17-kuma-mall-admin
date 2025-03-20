@@ -49,7 +49,7 @@ export async function GET(
             id: true,
             name_sku: true,
             sku: true,
-            img_url: true,
+            img_product: true, 
             quantity: true,
             price_origin: true
           }
@@ -78,7 +78,13 @@ export async function GET(
       flashSale.status = newStatus;
     }
 
-    return NextResponse.json(flashSale);
+    return NextResponse.json({
+      ...flashSale,
+      product: {
+        ...flashSale.product,
+        img_url_product: flashSale.product.img_product?.img_url_product || null,
+      }
+    });
   } catch (error) {
     console.error("Error fetching flash sale:", error);
     return NextResponse.json(

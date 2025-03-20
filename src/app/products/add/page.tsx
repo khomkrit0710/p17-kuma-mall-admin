@@ -8,6 +8,7 @@ import Image from 'next/image';
 import TagMultiSelect from '@/component/TagMultiSelect';
 
 type ProductFormData = {
+  img_url_product: any;
   sku: string;
   name_sku: string;
   quantity: number;
@@ -17,7 +18,6 @@ type ProductFormData = {
   product_length: number | null; 
   product_heigth: number | null;
   product_weight: number | null;
-  img_url: string;
   size: string;
   categories: string[];
   collections: string[];
@@ -66,7 +66,7 @@ export default function AddProductPage() {
     product_length: null,
     product_heigth: null,
     product_weight: null,
-    img_url: '',
+    img_url_product: '',
     size: '',
     categories: [],
     collections: []
@@ -168,7 +168,7 @@ export default function AddProductPage() {
         product_length: null,
         product_heigth: null,
         product_weight: null,
-        img_url: '',
+        img_url_product: '',
         size: '',
         categories: [],
         collections: []
@@ -244,7 +244,7 @@ export default function AddProductPage() {
       }
 
       const updatedProducts = [...productsList];
-      updatedProducts[productIndex].img_url = data.url;
+      updatedProducts[productIndex].img_url_product = data.url;
       setProductsList(updatedProducts);
       
     } catch (error) {
@@ -407,7 +407,7 @@ export default function AddProductPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            img_url: groupImages
+            img_url_group: groupImages
           }),
         });
       }
@@ -428,7 +428,6 @@ export default function AddProductPage() {
         });
       }
 
-      // สร้างข้อมูลสินค้าโดยส่งข้อมูลรูปภาพ (img_url) ไปด้วย
       const productsWithGroup = productsList.map(product => ({
         sku: product.sku,
         name_sku: product.name_sku,
@@ -440,7 +439,7 @@ export default function AddProductPage() {
         product_heigth: product.product_heigth,
         product_weight: product.product_weight,
         size: product.size,
-        img_url: product.img_url,
+        img_url_product: product.img_url_product,
         group_id: createdGroupId
       }));
 
@@ -892,10 +891,10 @@ export default function AddProductPage() {
                           disabled={uploading}
                         />
                         
-                        {product.img_url && (
+                        {product.img_url_product && (
                           <div className="mt-2">
                             <Image
-                              src={product.img_url} 
+                              src={product.img_url_product} 
                               alt={product.name_sku} 
                               width={96}
                               height={96}

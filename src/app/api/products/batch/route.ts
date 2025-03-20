@@ -69,7 +69,7 @@ export async function POST(request: Request) {
           product_length = null,
           product_heigth = null, 
           product_weight = null,
-          img_url = null,
+          img_url_product = null,
           size = null
         } = productData;
 
@@ -96,11 +96,11 @@ export async function POST(request: Request) {
           }
         });
 
-        if (img_url) {
+        if (img_url_product) {
           await tx.img_product.create({
             data: {
               product_id: newProduct.id,
-              img_url: img_url,
+              img_url_product,
               update_date: new Date()
             }
           });

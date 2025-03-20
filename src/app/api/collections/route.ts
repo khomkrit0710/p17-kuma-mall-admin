@@ -21,7 +21,7 @@ export async function GET() {
         uuid: true,
         name: true,
         description: true,
-        img_url: true,
+        img_url_collection: true,
         create_Date: true,
       },
       orderBy: {
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, description = "", img_url = null } = await request.json();
+    const { name, description = "", img_url_collection = null } = await request.json();
 
     if (!name) {
       return NextResponse.json(
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       data: {
         name,
         description,
-        img_url,
+        img_url_collection,
       },
     });
 

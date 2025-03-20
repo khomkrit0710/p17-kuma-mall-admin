@@ -81,7 +81,7 @@ export async function PUT(
       );
     }
 
-    const { name, description = "", img_url } = await request.json();
+    const { name, description = "", img_url_category } = await request.json();
 
     if (!name) {
       return NextResponse.json(
@@ -109,7 +109,7 @@ export async function PUT(
       data: {
         name,
         description,
-        img_url
+        img_url_category
       }
     });
 

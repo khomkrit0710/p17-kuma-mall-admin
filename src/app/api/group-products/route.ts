@@ -104,7 +104,7 @@ export async function GET(request: Request) {
       let groupImageUrl = null;
       if (group.img_group_product && 
           group.img_group_product.img_url_group && 
-          Array.isArray(group.img_group_product._group) && 
+          Array.isArray(group.img_group_product.img_url_group) && 
           group.img_group_product.img_url_group.length > 0) {
         groupImageUrl = group.img_group_product.img_url_group[0];
       }
@@ -118,7 +118,7 @@ export async function GET(request: Request) {
         products: productsWithFlashSale,
         total_products: group.products.length,
         has_flash_sale: hasFlashSale,
-        main_img_url: groupImageUrl 
+        img_url_group: groupImageUrl 
       };
     }));
 

@@ -50,6 +50,7 @@ export async function GET(
                 create_Date: true,
                 update_date: true,
                 flash_sale: true,
+                img_product: true
               }
             }
           }
@@ -89,8 +90,6 @@ export async function GET(
         name: gc.collection.name
       }));
 
-      const productImage = product.img_product ? product.img_product.img_url_product : null;
-
       return {
         id: product.id,
         uuid: product.uuid,
@@ -106,7 +105,7 @@ export async function GET(
         group_name: product.group_name,
         create_Date: product.create_Date,
         update_date: product.update_date,
-        img_url_product: productImage,
+        img_product: product.img_product,
         categories,
         collections,
         flash_sale: product.flash_sale
@@ -135,7 +134,7 @@ export async function GET(
       categories: groupCategories,
       collections: groupCollections,
       product_description: group.product_description,
-      main_img_url: groupImages,
+      img_url_group: groupImages,
     });
   } catch (error) {
     console.error("Error fetching group product:", error);
@@ -184,12 +183,12 @@ export async function PUT(
       group_name,
       subname = "",
       description = "", 
-      main_img_url = [],
+      img_url_group = [],
       categories = [],
       collections = []
     } = await request.json();
 
-    if (!group_name) {
+    if (!group_name.trim()) {
       return NextResponse.json(
         { error: "กรุณาระบุชื่อกลุ่มสินค้า" },
         { status: 400 }
@@ -248,7 +247,7 @@ export async function PUT(
         });
       }
 
-      if (main_img_url && main_img_url.length > 0) {
+      if (img_url_group && img_url_group.length > 0) {
         const existingImages = await tx.img_group_product.findUnique({
           where: { group_id: groupId }
         });
@@ -257,7 +256,7 @@ export async function PUT(
           await tx.img_group_product.update({
             where: { id: existingImages.id },
             data: {
-              img_url_group: main_img_url,
+              img_url_group,
               update_date: new Date()
             }
           });
@@ -265,7 +264,7 @@ export async function PUT(
           await tx.img_group_product.create({
             data: {
               group_id: groupId,
-              img_url_group: main_img_url,
+              img_url_group,
               update_date: new Date()
             }
           });

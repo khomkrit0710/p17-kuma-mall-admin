@@ -57,7 +57,7 @@ export async function GET(request: Request) {
         product: {
           select: {
             name_sku: true,
-            img_url: true,
+            img_product: true,
             quantity: true
           }
         }
@@ -98,7 +98,13 @@ export async function GET(request: Request) {
     const totalPages = Math.ceil(totalFlashSales / limit);
 
     return NextResponse.json({
-      data: updatedFlashSales,
+      data: updatedFlashSales.map(sale => ({
+        ...sale,
+        product: {
+          ...sale.product,
+          img_url_product: sale.product.img_product?.img_url_product || null,
+        }
+      })),
       pagination: {
         total: totalFlashSales,
         page,
@@ -114,6 +120,7 @@ export async function GET(request: Request) {
     );
   }
 }
+
 
 export async function POST(request: Request) {
   try {

@@ -32,7 +32,7 @@ export async function GET(
 
       if (!imageData) {
         return NextResponse.json(
-          { img_url: [] }
+          { img_url_group: [] }
         );
       }
 
@@ -78,9 +78,9 @@ export async function POST(
       );
     }
 
-    const { img_url } = await request.json();
+    const { img_url_group } = await request.json();
 
-    if (!img_url || !Array.isArray(img_url)) {
+    if (!img_url_group || !Array.isArray(img_url_group)) {
       return NextResponse.json(
         { error: "กรุณาระบุ URL รูปภาพในรูปแบบ array" },
         { status: 400 }

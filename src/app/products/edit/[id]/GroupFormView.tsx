@@ -17,7 +17,7 @@ type GroupFormViewProps = {
     group_name: string;
     subname: string;
     description: string;
-    main_img_url: string[];
+    img_url_group: string[];
   };
   isEditingGroup: boolean;
   setIsEditingGroup: (value: boolean) => void;
@@ -239,11 +239,11 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                 สามารถอัปโหลดรูปภาพหลายรูปได้ (ขนาดไฟล์ไม่เกิน 5MB ต่อรูป)
               </p>
 
-              {editedGroupData.main_img_url && Array.isArray(editedGroupData.main_img_url) && editedGroupData.main_img_url.length > 0 && (
+              {editedGroupData.img_url_group && Array.isArray(editedGroupData.img_url_group) && editedGroupData.img_url_group.length > 0 && (
                 <div className="mt-4">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">รูปภาพที่อัปโหลดแล้ว:</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {editedGroupData.main_img_url.map((url, index) => (
+                    {editedGroupData.img_url_group.map((url, index) => (
                       <div key={index} className="relative group">
                         <Image
                           src={url} 
@@ -372,11 +372,11 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
             </div>
             
             <div>
-              {groupData.main_img_url && Array.isArray(groupData.main_img_url) && groupData.main_img_url.length > 0 && (
+              {groupData.img_url_group && Array.isArray(groupData.img_url_group) && groupData.img_url_group.length > 0 && (
                 <div>
                   <span className="text-sm text-gray-500 block mb-2">รูปภาพหลัก:</span>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {groupData.main_img_url.map((url, index) => (
+                    {groupData.img_url_group.map((url, index) => (
                       <div key={index} className="aspect-square">
                         <Image
                           src={url} 
@@ -544,10 +544,10 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       disabled={uploading}
                     />
                     
-                    {newProduct.img_product && newProduct.img_product.img_url_sku && (
+                    {newProduct.img_product && newProduct.img_product.img_url_product && (
                       <div className="mt-2">
                         <Image
-                          src={newProduct.img_product.img_url_sku} 
+                          src={newProduct.img_product.img_url_product} 
                           alt="ตัวอย่างรูปภาพ" 
                           width={96}
                           height={96}
@@ -557,8 +557,7 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                     )}
                   </div>
                 </div>
-                
-                {/* ข้อมูลขนาดและข้อมูลเพิ่มเติม */}
+
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="new_product_width" className="block text-sm font-medium text-gray-700 mb-1">
@@ -821,10 +820,10 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                               disabled={uploading}
                             />
                             
-                            {product.img_product && product.img_product.img_url_sku && (
+                            {product.img_product && product.img_product.img_url_product && (
                               <div className="mt-2">
                                 <Image 
-                                  src={product.img_product.img_url_sku} 
+                                  src={product.img_product.img_url_product} 
                                   alt={product.name_sku} 
                                   width={96}
                                   height={96}
@@ -1024,9 +1023,9 @@ const GroupFormView: React.FC<GroupFormViewProps> = ({
                       <div className="mt-6">
                         <span className="text-sm text-gray-500">รูปภาพสินค้า:</span>
                         <div className="mt-2">
-                        {product.img_product && product.img_product.img_url_sku ?  (
+                        {product.img_product && product.img_product.img_url_product ?  (
                             <Image 
-                              src={product.img_product.img_url_sku} 
+                              src={product.img_product.img_url_product} 
                               alt={product.name_sku} 
                               width={200}
                               height={200}

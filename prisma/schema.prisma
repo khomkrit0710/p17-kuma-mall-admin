@@ -112,7 +112,7 @@ model collection {
   create_Date           DateTime    @default(now())
   name                  String      @unique
   description           String?     @db.Text
-  img_url_collaction    String?
+  img_url_collection    String?
   
   groups          group_to_collection[]
 }

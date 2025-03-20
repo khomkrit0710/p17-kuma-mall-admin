@@ -6,8 +6,8 @@ import { useSession } from 'next-auth/react';
 import DashboardLayout from '@/component/DashboardLayout';
 import Image from 'next/image';
 
-    //<<-------------------Type------------------->>
 type Collection = {
+  img_url_collection: string;
   id: number;
   uuid: string;
   name: string;
@@ -18,7 +18,6 @@ type Collection = {
 
 export default function CollectionsPage() {
 
-    //<<-------------------State------------------->>
   const router = useRouter();
   const { status } = useSession();
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -29,7 +28,7 @@ export default function CollectionsPage() {
     id: 0,
     name: '',
     description: '',
-    img_url: '',
+    img_url_collection: '',
   });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -37,8 +36,6 @@ export default function CollectionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-
-    //<<-------------------useEffect------------------->>
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -71,14 +68,12 @@ export default function CollectionsPage() {
     fetchCollections();
   }, [status]);
 
-
-    //<<-------------------handle------------------->>
   const handleAddCollection = () => {
     if (totalCollections >= 10) { 
       setError('ไม่สามารถเพิ่มคอลเลคชันได้อีก เนื่องจากมีจำนวนคอลเลคชันสูงสุดแล้ว (11 รายการ)');
       return;
     }
-    setFormData({ id: 0, name: '', description: '', img_url: '' });
+    setFormData({ id: 0, name: '', description: '', img_url_collection: '' });
     setIsEditing(false);
     setShowForm(true);
     setError(null);
@@ -89,7 +84,7 @@ export default function CollectionsPage() {
       id: collection.id, 
       name: collection.name, 
       description: collection.description || '',
-      img_url: collection.img_url || ''
+      img_url_collection: collection.img_url_collection || ''
     });
     setIsEditing(true);
     setShowForm(true);
@@ -127,7 +122,7 @@ export default function CollectionsPage() {
       
       setFormData(prevFormData => ({
         ...prevFormData,
-        img_url: data.url
+        img_url_collection: data.url
       }));
       
     } catch (error) {
@@ -160,7 +155,7 @@ export default function CollectionsPage() {
           body: JSON.stringify({
             name: formData.name,
             description: formData.description,
-            img_url: formData.img_url || null
+            img_url_collection: formData.img_url_collection || null
           }),
         });
       } else {
@@ -172,7 +167,7 @@ export default function CollectionsPage() {
           body: JSON.stringify({
             name: formData.name,
             description: formData.description,
-            img_url: formData.img_url || null
+            img_url_collection: formData.img_url_collection || null
           }),
         });
       }
@@ -183,7 +178,7 @@ export default function CollectionsPage() {
         throw new Error(data.error || 'เกิดข้อผิดพลาดในการบันทึกคอลเลคชัน');
       }
     
-      setFormData({ id: 0, name: '', description: '', img_url: '' });
+      setFormData({ id: 0, name: '', description: '', img_url_collection: '' });
       setShowForm(false);
       setSuccess(isEditing ? 'แก้ไขคอลเลคชันสำเร็จ' : 'เพิ่มคอลเลคชันสำเร็จ');
 
@@ -329,10 +324,10 @@ export default function CollectionsPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">รองรับไฟล์รูปภาพ (ขนาดไม่เกิน 5MB)</p>
                 
-                {formData.img_url && (
+                {formData.img_url_collection && (
                   <div className="mt-2">
                     <Image
-                      src={formData.img_url} 
+                      src={formData.img_url_collection} 
                       alt="รูปภาพคอลเลคชัน" 
                       width={96}
                       height={96}

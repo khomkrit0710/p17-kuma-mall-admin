@@ -16,12 +16,12 @@ export default function EditGroupForm({ id }: { id: string }) {
     group_name: string;
     subname: string;
     description: string;
-    main_img_url: string[];
+    img_url_group: string[];
   }>({
     group_name: '',
     subname: '',
     description: '',
-    main_img_url: []
+    img_url_group: []
   });
   const [products, setProducts] = useState<EditableProductData[]>([]);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
@@ -77,7 +77,7 @@ export default function EditGroupForm({ id }: { id: string }) {
           group_name: data.group_name,
           subname: data.subname || '',
           description: data.description || '',
-          main_img_url: Array.isArray(data.main_img_url) ? data.main_img_url : []
+          img_url_group: Array.isArray(data.img_url_group) ? data.img_url_group : []
         });
 
         if (data.categories && Array.isArray(data.categories)) {
@@ -105,7 +105,7 @@ export default function EditGroupForm({ id }: { id: string }) {
             product_heigth: product.product_heigth,
             product_weight: product.product_weight,
             img_product: product.img_product || null,
-            img_url_sku: product.img_product?.img_url_sku || null,
+            img_url: product.img_product?.img_url_product || null,
             size: product.size,
             categories: data.categories.map((cat: { id: { toString: () => string } }): string => cat.id.toString()),
             collections: data.collections.map((col: { id: { toString: () => string } }): string => col.id.toString()),
@@ -200,7 +200,7 @@ export default function EditGroupForm({ id }: { id: string }) {
           product.sku = value;
           break;
         case 'img_url':
-          product.img_product = value ? { img_url_sku: value } : null;
+          product.img_product = value ? { img_url_product: value } : null;
           break;
         case 'size':
           product.size = value || null;
@@ -252,7 +252,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       const newImageUrl = data.url;
       setEditedGroupData({
         ...editedGroupData,
-        main_img_url: [...editedGroupData.main_img_url, newImageUrl]
+        img_url_group: [...editedGroupData.img_url_group, newImageUrl]
       });
       
     } catch (error) {
@@ -284,7 +284,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       }
       const updatedProducts = [...products];
       updatedProducts[productIndex].img_product = {
-        img_url_sku: data.url
+        img_url_product: data.url
       };
       updatedProducts[productIndex].img_url = data.url;
 
@@ -321,7 +321,7 @@ export default function EditGroupForm({ id }: { id: string }) {
       setNewProduct({
         ...newProduct,
         img_product: {
-          img_url_sku: data.url
+          img_url_product: data.url
         }
       });
       
@@ -333,12 +333,12 @@ export default function EditGroupForm({ id }: { id: string }) {
   };
 
   const removeMainImage = (index: number) => {
-    const updatedImages = [...editedGroupData.main_img_url];
+    const updatedImages = [...editedGroupData.img_url_group];
     updatedImages.splice(index, 1);
     
     setEditedGroupData({
       ...editedGroupData,
-      main_img_url: updatedImages
+      img_url_group: updatedImages
     });
   };
 
@@ -368,7 +368,7 @@ export default function EditGroupForm({ id }: { id: string }) {
         ...editedGroupData,
         categories: groupCategories,
         collections: groupCollections,
-        main_img_url: editedGroupData.main_img_url
+        img_url_group: editedGroupData.img_url_group
       };
       
       const response = await fetch(`/api/group-products/${groupId}`, {
@@ -399,7 +399,7 @@ export default function EditGroupForm({ id }: { id: string }) {
             group_name: editedGroupData.group_name,
             subname: editedGroupData.subname,
             description: editedGroupData.description,
-            main_img_url: editedGroupData.main_img_url, 
+            img_url_group: editedGroupData.img_url_group,
             categories: formattedCategories,
             collections: formattedCollections
           });
@@ -450,7 +450,7 @@ export default function EditGroupForm({ id }: { id: string }) {
         product_length: product.product_length,
         product_heigth: product.product_heigth,
         product_weight: product.product_weight,
-        img_url_sku: product.img_product?.img_url_sku || null,
+        img_url_product: product.img_product?.img_url_product || null,
         size: product.size
       };
       
@@ -504,6 +504,7 @@ export default function EditGroupForm({ id }: { id: string }) {
 
       const productWithGroup = {
         ...newProduct,
+        img_url_product: newProduct.img_product?.img_url_product,
         group_id: parseInt(groupId)
       };
       

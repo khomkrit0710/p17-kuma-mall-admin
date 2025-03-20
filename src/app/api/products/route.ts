@@ -167,7 +167,7 @@ export async function POST(request: Request) {
       product_length = null,
       product_heigth = null, 
       product_weight = null,  
-      img_url = null,
+      img_url_product = null,
       group_name = "",
       size = null,
       group_id = null
@@ -219,15 +219,16 @@ export async function POST(request: Request) {
           product_length,
           product_heigth,
           product_weight,
-          group_name: realGroupName
+          group_name: realGroupName,
+          size
         }
       });
 
-      if (img_url) {
+      if (img_url_product) {
         await tx.img_product.create({
           data: {
             product_id: newProduct.id,
-            img_url_product,
+            img_url_product: img_url_product,
             update_date: new Date()
           }
         });

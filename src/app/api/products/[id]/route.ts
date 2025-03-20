@@ -161,8 +161,8 @@ export async function PUT(
       product_width = null,
       product_length = null,
       product_heigth = null, 
-      product_weight = null,  
-      img_url = null,
+      product_weight = null,
+      img_url_product = null,
       size = null,
       group_name,
       group_id = null 
@@ -227,29 +227,23 @@ export async function PUT(
         });
       }
 
-      if (img_url) {
-        const finalImgUrl = typeof img_url === 'string' ? img_url : 
-                         (typeof img_url === 'object' && img_url !== null && 'img_url' in img_url) ? 
-                         (img_url as {img_url: string}).img_url : null;
-        
-        if (finalImgUrl) {
-          if (existingProduct.img_product) {
-            await tx.img_product.update({
-              where: { product_id: productId },
-              data: {
-                img_url: finalImgUrl,
-                update_date: new Date()
-              }
-            });
-          } else {
-            await tx.img_product.create({
-              data: {
-                product_id: productId,
-                img_url: finalImgUrl,
-                update_date: new Date()
-              }
-            });
-          }
+      if (img_url_product) {
+        if (existingProduct.img_product) {
+          await tx.img_product.update({
+            where: { product_id: productId },
+            data: {
+              img_url_product,
+              update_date: new Date()
+            }
+          });
+        } else {
+          await tx.img_product.create({
+            data: {
+              product_id: productId,
+              img_url_product,
+              update_date: new Date()
+            }
+          });
         }
       }
 
