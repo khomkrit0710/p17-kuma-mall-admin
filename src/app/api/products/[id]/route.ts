@@ -162,7 +162,7 @@ export async function PUT(
       product_length = null,
       product_heigth = null, 
       product_weight = null,  
-      img_url = null, // รองรับการรับค่า img_url เพื่อ backward compatibility
+      img_url = null,
       size = null,
       group_name,
       group_id = null 

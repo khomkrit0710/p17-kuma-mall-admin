@@ -100,7 +100,7 @@ export async function POST(request: Request) {
           await tx.img_product.create({
             data: {
               product_id: newProduct.id,
-              img_url,
+              img_url: img_url,
               update_date: new Date()
             }
           });

@@ -50,7 +50,6 @@ export async function GET(
                 create_Date: true,
                 update_date: true,
                 flash_sale: true,
-                img_product: true,
               }
             }
           }
@@ -90,7 +89,7 @@ export async function GET(
         name: gc.collection.name
       }));
 
-      const productImage = product.img_product ? product.img_product.img_url : null;
+      const productImage = product.img_product ? product.img_product.img_url_product : null;
 
       return {
         id: product.id,
@@ -107,7 +106,7 @@ export async function GET(
         group_name: product.group_name,
         create_Date: product.create_Date,
         update_date: product.update_date,
-        img_url: productImage,
+        img_url_product: productImage,
         categories,
         collections,
         flash_sale: product.flash_sale
@@ -124,7 +123,7 @@ export async function GET(
       name: gc.collection.name
     }));
 
-    const groupImages = group.img_group_product ? group.img_group_product.img_url : [];
+    const groupImages = group.img_group_product ? group.img_group_product.img_url_group : [];
 
     return NextResponse.json({
       id: group.id,
@@ -258,7 +257,7 @@ export async function PUT(
           await tx.img_group_product.update({
             where: { id: existingImages.id },
             data: {
-              img_url: main_img_url,
+              img_url_group: main_img_url,
               update_date: new Date()
             }
           });
@@ -266,7 +265,7 @@ export async function PUT(
           await tx.img_group_product.create({
             data: {
               group_id: groupId,
-              img_url: main_img_url,
+              img_url_group: main_img_url,
               update_date: new Date()
             }
           });

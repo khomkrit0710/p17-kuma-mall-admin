@@ -30,7 +30,7 @@ export type ProductData = {
   product_length: number | null; 
   product_heigth: number | null;
   product_weight: number | null;
-  img_product: {img_url: string;} | null;
+  img_product: {img_url_sku: string;} | null;
   size: string | null;
   group_name: string;
   create_Date: string;
@@ -61,7 +61,7 @@ export type EditableProductData = {
   product_length: number | null; 
   product_heigth: number | null;
   product_weight: number | null;
-  img_product: {img_url: string;} | null;
+  img_product: {img_url_sku: string;} | null;
   size: string | null;
   categories: string[];
   collections: string[];

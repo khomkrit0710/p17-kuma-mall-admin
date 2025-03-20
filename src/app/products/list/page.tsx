@@ -26,7 +26,7 @@ type ProductBrief = {
   name_sku: string;
   price_origin: number;
   quantity: number;
-  img_url: string | null;
+  img_url_sku: string | null;
   flash_sale?: {
     status: string;
   } | null;

@@ -72,11 +72,11 @@ model product_description {
 }
 
 model img_product {
-  id          Int      @id @default(autoincrement())
-  product_id  Int      @unique
-  img_url     String
-  create_date DateTime @default(now())
-  update_date DateTime @updatedAt
+  id                Int      @id @default(autoincrement())
+  product_id        Int      @unique
+  img_url_product   String?
+  create_date       DateTime @default(now())
+  update_date       DateTime @updatedAt
   
   product     product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
 
@@ -85,35 +85,34 @@ model img_product {
 
 
 model img_group_product {
-  id          Int      @id @default(autoincrement())
-  group_id    Int      @unique
-  img_url     String[] @default([])
-  create_date DateTime @default(now())
-  update_date DateTime @updatedAt
+  id                Int       @id @default(autoincrement())
+  group_id          Int       @unique
+  img_url_group     String[]  @default([])
+  create_date       DateTime  @default(now())
+  update_date       DateTime  @updatedAt
   
   group       group_product @relation(fields: [group_id], references: [id], onDelete: Cascade)
-
   @@index([group_id])
 }
 
 model category {
-  id              Int         @id @default(autoincrement())
-  uuid            String      @default(uuid())
-  create_Date     DateTime    @default(now())
-  name            String      @unique
-  description     String?     @db.Text
-  img_url         String?
+  id                  Int         @id @default(autoincrement())
+  uuid                String      @default(uuid())
+  create_Date         DateTime    @default(now())
+  name                String      @unique
+  description         String?     @db.Text
+  img_url_category    String?
 
   groups          group_to_category[]
 }
 
 model collection {
-  id              Int         @id @default(autoincrement())
-  uuid            String      @default(uuid())
-  create_Date     DateTime    @default(now())
-  name            String      @unique
-  description     String?     @db.Text
-  img_url         String?
+  id                    Int         @id @default(autoincrement())
+  uuid                  String      @default(uuid())
+  create_Date           DateTime    @default(now())
+  name                  String      @unique
+  description           String?     @db.Text
+  img_url_collaction    String?
   
   groups          group_to_collection[]
 }

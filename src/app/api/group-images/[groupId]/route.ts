@@ -97,7 +97,7 @@ export async function POST(
       imageData = await prisma.img_group_product.update({
         where: { id: existingImages.id },
         data: {
-          img_url,
+          img_url_group,
           update_date: new Date()
         }
       });
@@ -105,7 +105,7 @@ export async function POST(
       imageData = await prisma.img_group_product.create({
         data: {
           group_id: groupId,
-          img_url,
+          img_url_group,
           update_date: new Date()
         }
       });

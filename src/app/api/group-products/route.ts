@@ -92,7 +92,7 @@ export async function GET(request: Request) {
           id: product.id,
           sku: product.sku,
           name_sku: product.name_sku,
-          img_url: product.img_product?.img_url || null,
+          img_url_product: product.img_product?.img_url_product || null,
           price_origin: product.price_origin,
           quantity: product.quantity,
           flash_sale: flashSale
@@ -103,10 +103,10 @@ export async function GET(request: Request) {
       
       let groupImageUrl = null;
       if (group.img_group_product && 
-          group.img_group_product.img_url && 
-          Array.isArray(group.img_group_product.img_url) && 
-          group.img_group_product.img_url.length > 0) {
-        groupImageUrl = group.img_group_product.img_url[0];
+          group.img_group_product.img_url_group && 
+          Array.isArray(group.img_group_product._group) && 
+          group.img_group_product.img_url_group.length > 0) {
+        groupImageUrl = group.img_group_product.img_url_group[0];
       }
       
       return {
@@ -153,8 +153,6 @@ export async function POST(request: Request) {
     const { 
       group_name, 
       subname = "",
-      description = "", 
-      main_img_url = [],
       categories = [],
       collections = []
     } = await request.json();

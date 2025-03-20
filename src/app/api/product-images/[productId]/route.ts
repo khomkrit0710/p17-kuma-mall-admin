@@ -32,7 +32,7 @@ export async function GET(
 
     if (!imageData) {
       return NextResponse.json(
-        { img_url: "" }
+        { img_url_sku: "" }
       );
     }
 
@@ -78,9 +78,9 @@ export async function POST(
       );
     }
 
-    const { img_url } = await request.json();
+    const { img_url_sku } = await request.json();
 
-    if (!img_url) {
+    if (!img_url_sku) { 
       return NextResponse.json(
         { error: "กรุณาระบุ URL รูปภาพ" },
         { status: 400 }
@@ -97,7 +97,7 @@ export async function POST(
       imageData = await prisma.img_product.update({
         where: { id: existingImage.id },
         data: {
-          img_url,
+          img_url_product: img_url_product,
           update_date: new Date()
         }
       });
@@ -105,7 +105,7 @@ export async function POST(
       imageData = await prisma.img_product.create({
         data: {
           product_id: productId,
-          img_url,
+          img_url_product: img_url_product, 
           update_date: new Date()
         }
       });
