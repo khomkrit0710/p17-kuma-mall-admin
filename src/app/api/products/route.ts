@@ -74,6 +74,7 @@ export async function GET(request: Request) {
           },
         },
         flash_sale: true,
+        img_product: true,
       },
       orderBy: {
         create_Date: "desc",
@@ -126,6 +127,7 @@ export async function GET(request: Request) {
           name: pg.group.group_name,
         })),
         flash_sale: product.flash_sale,
+        img_product: product.img_product,
       };
     });
 

@@ -225,7 +225,18 @@ model flash_sale {
 //  |___/                                                   
 //<<----------------------gernaral---------------------->>//
 
-
+model banner_silder {
+  id                              Int           @id @default(autoincrement())
+  create_date                     DateTime      @default(now())
+  update_date                     DateTime      @updatedAt
+  logo_main                       String?
+  popup_normolly                  String?
+  banner_login_register           String?
+  banner_slider_homepage          String[]      @default([])
+  banner_coupon_homepage_sec_1    String?
+  banner_coupon_homepage_sec_2    String?
+  banner_coupon_homepage_body     String?
+}
 
 
 

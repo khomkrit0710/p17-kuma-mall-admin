@@ -62,6 +62,16 @@ function Sidebar() {
           </Link>
         </li>
 
+        <li>
+          <Link 
+            href="/banner-slider" 
+            className={`block py-2 px-4 hover:bg-gray-700 ${isActive('/flash-sales') ? 'bg-gray-700' : ''}`} 
+            style={{borderBottom:"2px solid gray"}}
+          >
+            banner slider
+          </Link>
+        </li>
+
         {isSuperAdmin && (
           <li>
             <Link 

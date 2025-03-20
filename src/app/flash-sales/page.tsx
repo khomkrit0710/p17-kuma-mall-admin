@@ -27,6 +27,7 @@ type FlashSale = {
 };
 
 type Product = {
+ img_product: any;
  id: number;
  sku: string;
  name_sku: string;
@@ -143,7 +144,7 @@ export default function FlashSalesPage() {
         setSearchProducts([]);
       }
     };
-
+  
     const debounce = setTimeout(() => {
       searchProductsApi();
     }, 300);
@@ -771,9 +772,9 @@ export default function FlashSalesPage() {
                               onClick={() => handleSelectProduct(product)}
                             >
                               <div className="mr-3">
-                                {product.img_url_product ? (
+                                {product.img_product?.img_url_product? (
                                   <Image
-                                    src={product.img_url_product}
+                                    src={product.img_product?.img_url_product}
                                     alt={product.name_sku}
                                     width={40}
                                     height={40}
@@ -812,9 +813,9 @@ export default function FlashSalesPage() {
                     <div className="mb-6">
                       <div className="flex items-center mb-4">
                         <div className="mr-4">
-                          {selectedProduct.img_url_product ? (
+                          {selectedProduct.img_product?.img_url_product ? (
                             <Image
-                              src={selectedProduct.img_url_product}
+                              src={selectedProduct.img_product?.img_url_product}
                               alt={selectedProduct.name_sku}
                               width={64}
                               height={64}

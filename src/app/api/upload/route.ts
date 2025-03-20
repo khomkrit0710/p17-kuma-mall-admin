@@ -5,8 +5,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { existsSync } from "fs";
 
-const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const ALLOWED_FILE_TYPES = [
+
+  "image/jpeg", 
+  "image/png", 
+  "image/webp", 
+  "image/gif",
+
+  "video/mp4",
+  "video/webm",
+  "video/quicktime" 
+];
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,14 +42,14 @@ export async function POST(request: NextRequest) {
 
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: "ประเภทไฟล์ไม่ได้รับอนุญาต รองรับเฉพาะไฟล์รูปภาพ (JPEG, PNG, WebP, GIF)" },
+        { error: "ประเภทไฟล์ไม่ได้รับอนุญาต รองรับเฉพาะไฟล์รูปภาพ (JPEG, PNG, WebP, GIF) และวิดีโอ (MP4, WebM, MOV)" },
         { status: 400 }
       );
     }
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "ขนาดไฟล์ใหญ่เกินไป (สูงสุด 5MB)" },
+        { error: "ขนาดไฟล์ใหญ่เกินไป (สูงสุด 10MB)" },
         { status: 400 }
       );
     }
@@ -74,12 +86,16 @@ export async function POST(request: NextRequest) {
     }
     const fileUrl = `/uploads/${fileName}`;
     
+    const isVideo = file.type.startsWith('video/');
+    
     return NextResponse.json({
       success: true,
-      message: "อัปโหลดไฟล์สำเร็จ",
+      message: `อัปโหลด${isVideo ? 'วิดีโอ' : 'รูปภาพ'}สำเร็จ`,
       url: fileUrl,
       fileName: fileName,
-      originalName: originalName
+      originalName: originalName,
+      fileType: file.type,
+      isVideo: isVideo
     });
   } catch (error) {
     console.error('Error uploading file:', error);
