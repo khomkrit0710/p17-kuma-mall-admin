@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     const bannerData = await request.json();
-
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const result = await prisma.$executeRaw`
       INSERT INTO "banner_silder" (
         logo_main, 
@@ -107,8 +107,7 @@ export async function PUT(request: Request) {
     }
 
     const bannerData = await request.json();
-    
-    // ตรวจสอบว่ามีข้อมูลแบนเนอร์อยู่แล้วหรือไม่
+
     const existingBannerResult = await prisma.$queryRaw`SELECT id FROM "banner_silder" LIMIT 1`;
     const existingBanner = Array.isArray(existingBannerResult) && existingBannerResult.length > 0 
       ? existingBannerResult[0] 
@@ -117,7 +116,6 @@ export async function PUT(request: Request) {
     let updatedBanner;
     
     if (existingBanner) {
-      // อัปเดตข้อมูลที่มีอยู่
       await prisma.$executeRaw`
         UPDATE "banner_silder" 
         SET 
@@ -131,12 +129,10 @@ export async function PUT(request: Request) {
           update_date = CURRENT_TIMESTAMP
         WHERE id = ${existingBanner.id}
       `;
-      
-      // ดึงข้อมูลที่อัปเดตแล้ว
+
       const updatedResult = await prisma.$queryRaw`SELECT * FROM "banner_silder" WHERE id = ${existingBanner.id}`;
       updatedBanner = Array.isArray(updatedResult) && updatedResult.length > 0 ? updatedResult[0] : null;
     } else {
-      // สร้างข้อมูลใหม่ถ้ายังไม่มี
       await prisma.$executeRaw`
         INSERT INTO "banner_silder" (
           logo_main, 
@@ -160,8 +156,7 @@ export async function PUT(request: Request) {
           CURRENT_TIMESTAMP
         )
       `;
-      
-      // ดึงข้อมูลที่เพิ่งสร้าง
+
       const newResult = await prisma.$queryRaw`SELECT * FROM "banner_silder" ORDER BY id DESC LIMIT 1`;
       updatedBanner = Array.isArray(newResult) && newResult.length > 0 ? newResult[0] : null;
     }

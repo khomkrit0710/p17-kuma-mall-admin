@@ -34,6 +34,8 @@ export default function BannerManagement() {
   const [currentEditField, setCurrentEditField] = useState<string | null>(null);
   const [tempUploadFile, setTempUploadFile] = useState<File | null>(null);
   const [tempUploadPreview, setTempUploadPreview] = useState<string | null>(null);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [itemToDeleteIndex, setItemToDeleteIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -173,6 +175,46 @@ export default function BannerManagement() {
     openEditModal('banner_slider_homepage');
   };
 
+  const openDeleteConfirmation = (index: number) => {
+    setItemToDeleteIndex(index);
+    setDeleteConfirmationOpen(true);
+  };
+
+  const closeDeleteConfirmation = () => {
+    setItemToDeleteIndex(null);
+    setDeleteConfirmationOpen(false);
+  };
+
+  const handleDeleteSliderItem = async () => {
+    if (itemToDeleteIndex === null || !bannerData) return;
+    
+    try {
+      const updatedBannerData = { ...bannerData };
+      const newSliderItems = [...updatedBannerData.banner_slider_homepage];
+      const isVideo = isVideoFile(newSliderItems[itemToDeleteIndex]);
+      newSliderItems.splice(itemToDeleteIndex, 1);
+      updatedBannerData.banner_slider_homepage = newSliderItems;
+      if (isVideo) {
+        const stillHasVideo = newSliderItems.some(item => isVideoFile(item));
+        setHasSliderVideo(stillHasVideo);
+      }
+      await saveBannerData(updatedBannerData);
+      
+      setBannerData(updatedBannerData);
+      setSuccess('ลบรายการสไลด์เดอร์สำเร็จ');
+      setTimeout(() => setSuccess(null), 3000);
+      
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการลบรายการ');
+    } finally {
+      closeDeleteConfirmation();
+    }
+  };
+
+  const isVideoFile = (url: string): boolean => {
+    return url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mov');
+  };
+
   const saveBannerData = async (data: any) => {
     try {
       const response = await fetch('/api/banners', {
@@ -284,6 +326,15 @@ export default function BannerManagement() {
                       unoptimized
                     />
                   )}
+                  
+                  {/* Delete button */}
+                  <button 
+                    onClick={() => openDeleteConfirmation(index)}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                    title="ลบรายการนี้"
+                  >
+                    ×
+                  </button>
                 </div>
               ))
             ) : (
@@ -548,6 +599,30 @@ export default function BannerManagement() {
                 disabled={!tempUploadFile || uploading !== null}
               >
                 {uploading ? 'กำลังอัปโหลด...' : 'ยืนยัน'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirmationOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4">ยืนยันการลบ</h2>
+            <p className="mb-6">คุณแน่ใจหรือไม่ที่จะลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={closeDeleteConfirmation}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleDeleteSliderItem}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                ลบ
               </button>
             </div>
           </div>
