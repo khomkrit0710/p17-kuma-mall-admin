@@ -17,6 +17,7 @@ type GroupProduct = {
   create_Date: string;
   products: ProductBrief[];
   total_products: number;
+  total_inventory?: number; // เพิ่ม property สำหรับเก็บจำนวนสินค้าในคลัง
   has_flash_sale?: boolean;
 };
 
@@ -88,10 +89,19 @@ export default function ProductList() {
         
         const data = await response.json();
 
+        // คำนวณจำนวนสินค้าในแต่ละกลุ่ม และ สถานะ Flash Sale
         const groupsWithFlashSaleStatus = data.data.map((group: GroupProduct) => {
+          // คำนวณจำนวนสินค้าในคลัง (โดยรวม quantity ของทุกสินค้าในกลุ่ม)
+          const totalInventory = Array.isArray(group.products) 
+            ? group.products.reduce((sum, product) => sum + (product.quantity || 0), 0) 
+            : 0;
+          
           const hasFlashSale = group.products.some(product => product.flash_sale !== null);
+          
           return {
             ...group,
+            total_products: group.products.length, // จำนวนรายการสินค้า
+            total_inventory: totalInventory, // จำนวนสินค้าในคลัง (ชิ้น)
             has_flash_sale: hasFlashSale
           };
         });
@@ -382,113 +392,108 @@ export default function ProductList() {
 
         <div className="bg-white rounded shadow overflow-x-auto mb-6">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">รูปภาพ</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ชื่อกลุ่มสินค้า</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">คำอธิบาย</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จำนวนสินค้า</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จำนวนรายการ</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">สินค้าในคลัง</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Flash Sale</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">วันที่สร้าง</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">จัดการ</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {groups.length > 0 ? (
-                groups.map((group) => (
-                  <tr key={group.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {group.img_url_group ? (
-                        <Image 
-                          src={group.img_url_group} 
-                          alt={group.group_name}
-                          width={48}
-                          height={48}
-                          className="object-cover rounded border"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 bg-gray-200 flex items-center justify-center rounded border">
-                          <span className="text-gray-400 text-xs">ไม่มีรูป</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{group.group_name}</div>
-                      {group.subname && (
-                        <div className="text-sm text-gray-500">{group.subname}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{group.group_name}</div>
-                    </td>
-                    <td className="px-4 py-3">
-                      {group.description ? (
-                        <div className="text-gray-500 truncate max-w-xs">{group.description}</div>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                        {group.total_products} รายการ
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {(() => {
-                        const flashSaleStatus = getGroupFlashSaleStatus(group);
-                        if (flashSaleStatus === 'active') {
-                          return (
-                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                              กำลังดำเนินการ
-                            </span>
-                          );
-                        } else if (flashSaleStatus === 'pending') {
-                          return (
-                            <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                              กำลังจะเริ่ม
-                            </span>
-                          );
-                        } else {
-                          return (
-                            <span className="text-gray-500">-</span>
-                          );
-                        }
-                      })()}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {formatDate(group.create_Date)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex space-x-2">
-                        <Link
-                          href={`/products/edit/${group.id}`}
-                          className="text-indigo-600 hover:text-indigo-900"
-                        >
-                          แก้ไข
-                        </Link>
-                        <button
-                          onClick={() => confirmDeleteGroup(group.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          ลบ
-                        </button>
+            {groups.length > 0 ? (
+              groups.map((group) => (
+                <tr key={group.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {group.img_url_group ? (
+                      <Image 
+                        src={group.img_url_group} 
+                        alt={group.group_name}
+                        width={48}
+                        height={48}
+                        className="object-cover rounded border"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 bg-gray-200 flex items-center justify-center rounded border">
+                        <span className="text-gray-400 text-xs">ไม่มีรูป</span>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              ) : loading ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                    กำลังโหลดข้อมูล...
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-gray-900">{group.group_name}</div>
+                    {group.subname && (
+                      <div className="text-sm text-gray-500">{group.subname}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                      {group.total_products} รายการ
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                      {group.total_inventory} ชิ้น
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {(() => {
+                      const flashSaleStatus = getGroupFlashSaleStatus(group);
+                      if (flashSaleStatus === 'active') {
+                        return (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                            กำลังดำเนินการ
+                          </span>
+                        );
+                      } else if (flashSaleStatus === 'pending') {
+                        return (
+                          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                            กำลังจะเริ่ม
+                          </span>
+                        );
+                      } else {
+                        return (
+                          <span className="text-gray-500">-</span>
+                        );
+                      }
+                    })()}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {formatDate(group.create_Date)}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex space-x-2">
+                      <Link
+                        href={`/products/edit/${group.id}`}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        แก้ไข
+                      </Link>
+                      <button
+                        onClick={() => confirmDeleteGroup(group.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        ลบ
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ) : (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
-                    ไม่พบกลุ่มสินค้า {search && `สำหรับคำค้น "${search}"`}
-                  </td>
-                </tr>
-              )}
+              ))
+            ) : loading ? (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                  กำลังโหลดข้อมูล...
+                </td>
+              </tr>
+            ) : (
+              <tr>
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                  ไม่พบกลุ่มสินค้า {search && `สำหรับคำค้น "${search}"`}
+                </td>
+              </tr>
+            )}
             </tbody>
           </table>
         </div>
