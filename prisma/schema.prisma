@@ -41,7 +41,7 @@ model product {
   product_group       product_to_group[] 
   group_name          String            @db.Text @default("") 
   img_product         img_product?
-}
+}  
 
 model group_product {
   id                  Int               @id @default(autoincrement())
