@@ -224,7 +224,7 @@ export default function AddProductPage() {
 
   const handleProductImageUpload = async (productIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
+
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append('file', file);
@@ -887,7 +887,7 @@ export default function AddProductPage() {
                             hover:file:bg-blue-100"
                           disabled={uploading}
                         />
-                        
+                      
                         {product.img_url_product && (
                           <div className="mt-2">
                             <Image

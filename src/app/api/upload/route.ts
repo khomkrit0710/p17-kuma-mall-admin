@@ -5,6 +5,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { existsSync } from "fs";
 
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { s3Client } from "@/lib/minio";
+
 
 const ALLOWED_FILE_TYPES = [
 
@@ -61,31 +64,46 @@ export async function POST(request: NextRequest) {
     const timestamp = Date.now();
     const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
     const fileName = `${timestamp}${randomNum}.${fileExtension}`;
+ 
+    const bucketName = "product-images";
+
+    const uploadCommand = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: fileName,
+      Body: buffer,
+      ContentType: file.type,
+    });
+
+    await s3Client.send(uploadCommand);
+
     
-    const uploadDir = join(process.cwd(), 'public/uploads');
-    if (!existsSync(uploadDir)) {
-      try {
-        await mkdir(uploadDir, { recursive: true });
-      } catch (error) {
-        console.error('Error creating upload directory:', error);
-        return NextResponse.json(
-          { error: "เกิดข้อผิดพลาดในการสร้างโฟลเดอร์อัปโหลด" },
-          { status: 500 }
-        );
-      }
-    }
+    // const uploadDir = join(process.cwd(), 'public/uploads');
+    // if (!existsSync(uploadDir)) {
+    //   try {
+    //     await mkdir(uploadDir, { recursive: true });
+    //   } catch (error) {
+    //     console.error('Error creating upload directory:', error);
+    //     return NextResponse.json(
+    //       { error: "เกิดข้อผิดพลาดในการสร้างโฟลเดอร์อัปโหลด" },
+    //       { status: 500 }
+    //     );
+    //   }
+    // }
     
-    try {
-      await writeFile(`${uploadDir}/${fileName}`, buffer);
-    } catch (error) {
-      console.error('Error saving file:', error);
-      return NextResponse.json(
-        { error: "เกิดข้อผิดพลาดในการบันทึกไฟล์" },
-        { status: 500 }
-      );
-    }
-    const fileUrl = `/uploads/${fileName}`;
+    // try {
+    //   await writeFile(`${uploadDir}/${fileName}`, buffer);
+    // } catch (error) {
+    //   console.error('Error saving file:', error);
+    //   return NextResponse.json(
+    //     { error: "เกิดข้อผิดพลาดในการบันทึกไฟล์" },
+    //     { status: 500 }
+    //   );
+    // }
+    // const fileUrl = `/uploads/${fileName}`;
+    const fileUrl = `http://localhost:9000/${bucketName}/${fileName}`;
     
+    console.log("recent file path:",fileUrl)
+
     const isVideo = file.type.startsWith('video/');
     
     return NextResponse.json({
