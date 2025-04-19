@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     //   );
     // }
     // const fileUrl = `/uploads/${fileName}`;
-    const fileUrl = `http://localhost:9000/${bucketName}/${fileName}`;
+    const fileUrl = `https://p17-minio.claraindustries.com/${bucketName}/${fileName}`;
     
     console.log("recent file path:",fileUrl)
 
