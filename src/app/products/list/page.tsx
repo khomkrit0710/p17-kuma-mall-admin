@@ -17,7 +17,7 @@ type GroupProduct = {
   create_Date: string;
   products: ProductBrief[];
   total_products: number;
-  total_inventory?: number; // เพิ่ม property สำหรับเก็บจำนวนสินค้าในคลัง
+  total_inventory?: number;
   has_flash_sale?: boolean;
 };
 
@@ -89,9 +89,7 @@ export default function ProductList() {
         
         const data = await response.json();
 
-        // คำนวณจำนวนสินค้าในแต่ละกลุ่ม และ สถานะ Flash Sale
         const groupsWithFlashSaleStatus = data.data.map((group: GroupProduct) => {
-          // คำนวณจำนวนสินค้าในคลัง (โดยรวม quantity ของทุกสินค้าในกลุ่ม)
           const totalInventory = Array.isArray(group.products) 
             ? group.products.reduce((sum, product) => sum + (product.quantity || 0), 0) 
             : 0;
@@ -100,8 +98,8 @@ export default function ProductList() {
           
           return {
             ...group,
-            total_products: group.products.length, // จำนวนรายการสินค้า
-            total_inventory: totalInventory, // จำนวนสินค้าในคลัง (ชิ้น)
+            total_products: group.products.length,
+            total_inventory: totalInventory,
             has_flash_sale: hasFlashSale
           };
         });

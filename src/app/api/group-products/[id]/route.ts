@@ -289,7 +289,7 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -300,62 +300,61 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
-    const groupId = parseInt(id);
-
+    const groupId = parseInt(params.id);
+    
     if (isNaN(groupId)) {
-      return NextResponse.json(
-        { error: "รหัสกลุ่มสินค้าไม่ถูกต้อง" },
-        { status: 400 }
-      );
+      return NextResponse.json({ 
+        success: false, 
+        error: "รหัสกลุ่มสินค้าไม่ถูกต้อง" 
+      }, { status: 400 });
     }
 
     const existingGroup = await prisma.group_product.findUnique({
-      where: { id: groupId },
-      include: {
-        products: true
-      }
+      where: { id: groupId }
     });
 
     if (!existingGroup) {
-      return NextResponse.json(
-        { error: "ไม่พบกลุ่มสินค้า" },
-        { status: 404 }
-      );
+      return NextResponse.json({ 
+        success: false, 
+        error: "ไม่พบกลุ่มสินค้า" 
+      }, { status: 404 });
     }
 
     await prisma.$transaction(async (tx) => {
-      const productRelations = await tx.product_to_group.findMany({
-        where: { group_id: groupId },
-        select: { product_id: true }
-      });
-      
-      const productIds = productRelations.map(rel => rel.product_id);
-
       await tx.product_to_group.deleteMany({
         where: { group_id: groupId }
       });
 
-      if (productIds.length > 0) {
-        await tx.product.deleteMany({
-          where: { id: { in: productIds } }
-        });
-      }
+      await tx.group_to_category.deleteMany({
+        where: { group_id: groupId }
+      });
+
+      await tx.group_to_collection.deleteMany({
+        where: { group_id: groupId }
+      });
+
+      await tx.product_description.deleteMany({
+        where: { group_id: groupId }
+      });
+
+      await tx.img_group_product.deleteMany({
+        where: { group_id: groupId }
+      });
 
       await tx.group_product.delete({
         where: { id: groupId }
       });
     });
 
-    return NextResponse.json({
+    return NextResponse.json({ 
       success: true,
-      message: "ลบกลุ่มสินค้าและสินค้าที่เกี่ยวข้องสำเร็จ"
+      message: "ลบกลุ่มสินค้าสำเร็จ"
     });
   } catch (error) {
     console.error("Error deleting group product:", error);
-    return NextResponse.json(
-      { error: "เกิดข้อผิดพลาดในการลบกลุ่มสินค้า" },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      error: "เกิดข้อผิดพลาดในการลบกลุ่มสินค้า"
+    }, { status: 500 });
   }
 }

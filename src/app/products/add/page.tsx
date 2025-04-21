@@ -38,6 +38,47 @@ type DescriptionSection = {
   img_url: string;
 };
 
+const Modal = ({ isOpen, onClose, title, message, isError = false }: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  title: string; 
+  message: string;
+  isError?: boolean;
+}) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 backdrop-blur-x bg-white/30 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-11/12 max-w-md">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className={`text-lg font-medium ${isError ? 'text-red-600' : 'text-green-600'}`}>
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="mb-4">
+          {message}
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={onClose}
+            className={`px-4 py-2 rounded ${isError ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
+          >
+            ตกลง
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function AddProductPage() {
   const router = useRouter();
   const { status } = useSession();
@@ -82,6 +123,29 @@ export default function AddProductPage() {
   const [descriptionSections, setDescriptionSections] = useState<DescriptionSection[]>([
     { text: '', img_url: '' }
   ]);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
+  const [isErrorModal, setIsErrorModal] = useState(false);
+
+  const showErrorModal = (message: string) => {
+    setModalTitle('ผิดพลาด!');
+    setModalMessage(message);
+    setIsErrorModal(true);
+    setIsModalOpen(true);
+  };
+
+  const showSuccessModal = (message: string) => {
+    setModalTitle('สำเร็จ!');
+    setModalMessage(message);
+    setIsErrorModal(false);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -178,7 +242,7 @@ export default function AddProductPage() {
 
   const removeProduct = (index: number) => {
     if (productsList.length === 1) {
-      setError('ต้องมีสินค้าอย่างน้อย 1 รายการ');
+      showErrorModal('ต้องมีสินค้าอย่างน้อย 1 รายการ');
       return;
     }
     
@@ -210,7 +274,7 @@ export default function AddProductPage() {
       setGroupImages([...groupImages, data.url]);
       
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+      showErrorModal(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
     } finally {
       setUploading(false);
     }
@@ -248,7 +312,7 @@ export default function AddProductPage() {
       setProductsList(updatedProducts);
       
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+      showErrorModal(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
     } finally {
       setUploading(false);
     }
@@ -256,19 +320,19 @@ export default function AddProductPage() {
 
   const handleContinueToProducts = () => {
     if (!groupData.group_name.trim()) {
-      setError('กรุณาระบุชื่อกลุ่มสินค้า');
+      showErrorModal('กรุณาระบุชื่อกลุ่มสินค้า');
       return;
     }
 
     const hasValidCategory = groupCategories.some(catId => catId !== "0");
     if (!hasValidCategory) {
-      setError('กรุณาเลือกหมวดหมู่อย่างน้อย 1 หมวดหมู่');
+      showErrorModal('กรุณาเลือกหมวดหมู่อย่างน้อย 1 หมวดหมู่');
       return;
     }
 
     const hasValidCollection = groupCollections.some(colId => colId !== "0");
     if (!hasValidCollection) {
-      setError('กรุณาเลือกคอลเลคชันอย่างน้อย 1 คอลเลคชัน');
+      showErrorModal('กรุณาเลือกคอลเลคชันอย่างน้อย 1 คอลเลคชัน');
       return;
     }
     
@@ -292,7 +356,7 @@ export default function AddProductPage() {
 
   const removeDescriptionSection = (index: number) => {
     if (descriptionSections.length <= 1) {
-      setError('ต้องมีส่วนคำอธิบายอย่างน้อย 1 ส่วน');
+      showErrorModal('ต้องมีส่วนคำอธิบายอย่างน้อย 1 ส่วน');
       return;
     }
     
@@ -339,7 +403,7 @@ export default function AddProductPage() {
       setDescriptionSections(newSections);
       
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+      showErrorModal(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
     } finally {
       setUploading(false);
     }
@@ -376,6 +440,34 @@ export default function AddProductPage() {
         if (product.price_origin <= 0) {
           throw new Error(`กรุณาระบุราคาขายของสินค้าลำดับที่ ${i + 1}`);
         }
+      }
+
+      const skus = productsList.map(product => product.sku);
+
+      const duplicateSKUsInForm = skus.filter((sku, index) => skus.indexOf(sku) !== index);
+      if (duplicateSKUsInForm.length > 0) {
+        throw new Error(`พบ SKU ซ้ำกันในฟอร์ม: ${duplicateSKUsInForm.join(', ')}`);
+      }
+
+      const checkDuplicateResponse = await fetch('/api/products/check-duplicate-skus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ skus }),
+      });
+      
+      const checkResult = await checkDuplicateResponse.json();
+      
+      if (!checkDuplicateResponse.ok) {
+        if (checkResult.duplicates && checkResult.duplicates.length > 0) {
+          throw new Error(`มี SKU ที่ซ้ำกับในระบบ: ${checkResult.duplicates.join(', ')}`);
+        }
+        throw new Error(checkResult.error || 'เกิดข้อผิดพลาดในการตรวจสอบ SKU');
+      }
+      
+      if (checkResult.duplicates && checkResult.duplicates.length > 0) {
+        throw new Error(`มี SKU ที่ซ้ำกับในระบบ: ${checkResult.duplicates.join(', ')}`);
       }
 
       const groupPostData = {
@@ -443,30 +535,43 @@ export default function AddProductPage() {
         group_id: createdGroupId
       }));
 
-      const productsResponse = await fetch('/api/products/batch', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          products: productsWithGroup,
-          group_id: createdGroupId
-        }),
-      });
-      
-      if (!productsResponse.ok) {
-        const productsData = await productsResponse.json();
-        throw new Error(productsData.error || 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+      try {
+        const productsResponse = await fetch('/api/products/batch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            products: productsWithGroup,
+            group_id: createdGroupId
+          }),
+        });
+        
+        if (!productsResponse.ok) {
+          const productsData = await productsResponse.json();
+
+          await fetch(`/api/group-products/${createdGroupId}`, {
+            method: 'DELETE',
+          });
+          
+          throw new Error(productsData.error || 'เกิดข้อผิดพลาดในการเพิ่มสินค้า');
+        }
+        
+        showSuccessModal('เพิ่มกลุ่มสินค้าและสินค้าสำเร็จ');
+
+        setTimeout(() => {
+          router.push('/products/list');
+        }, 1500);
+      } catch (productError) {
+        await fetch(`/api/group-products/${createdGroupId}`, {
+          method: 'DELETE',
+        });
+        
+        throw productError;
       }
       
-      setSuccess('เพิ่มกลุ่มสินค้าและสินค้าสำเร็จ');
-
-      setTimeout(() => {
-        router.push('/products/list');
-      }, 1500);
-      
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      showErrorModal(error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setSubmitting(false);
     }
@@ -489,18 +594,15 @@ export default function AddProductPage() {
           {currentStep === 'group' ? 'สร้างกลุ่มสินค้าใหม่' : 'เพิ่มสินค้าในกลุ่ม'}
         </h1>
         
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <strong>ผิดพลาด!</strong> {error}
-          </div>
-        )}
+        {/* แสดง Modal แทนข้อความแจ้งเตือนแบบเดิม */}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          title={modalTitle}
+          message={modalMessage}
+          isError={isErrorModal}
+        />
         
-        {success && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            <strong>สำเร็จ!</strong> {success}
-          </div>
-        )}
-
         <div className="flex mb-6">
           <div className={`flex-1 text-center py-2 ${currentStep === 'group' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
             1. สร้างกลุ่มสินค้า
